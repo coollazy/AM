@@ -38,7 +38,7 @@ AM（Agent Account Manager）是一套在本機執行的網站，用來管理 Cl
 - 語言：TypeScript
 - 執行與打包：Bun，打包成單一執行檔，使用者不需安裝任何執行環境
 - 支援平台：macOS、Windows（不支援 Linux）
-- 網站後端：Hono；網站前端：React（Vite 建置）
+- 網站後端：Hono；網站前端：React（由 Bun 內建的打包功能建置並嵌入執行檔）
 - 單元測試：`bun test`
 
 完整架構見 `docs/architecture.md`。
@@ -103,4 +103,14 @@ docs/         設計文件
 
 ## 常用指令
 
-> 專案骨架建立後補上實際指令：安裝套件、執行測試、開發模式、打包執行檔。
+```sh
+bun install          # 安裝套件
+bun test             # 執行單元測試
+bun run typecheck    # 型別檢查
+bun run start        # 直接執行 am（不打包），例如 bun run start -- --help
+bun run dev          # 開發模式執行管理網站（修改後自動重載）
+bun run build        # 打包本機平台執行檔到 dist/am
+bun run build:all    # 打包 macOS（arm64、x64）與 Windows x64 執行檔到 dist/
+```
+
+每次完成功能前必須 `bun test` 與 `bun run typecheck` 都通過。
