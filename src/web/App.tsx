@@ -17,12 +17,15 @@ export function App() {
 
   return (
     <div className="page">
-      <header>
-        <h1>AM</h1>
-        <span className="sub">Agent Account Manager · 管理 Claude Code 的服務商與模型</span>
+      <header className="brand">
+        <div className="logo">AM</div>
+        <div>
+          <div className="title">Agent Account Manager</div>
+          <div className="subtitle">一鍵切換 Claude Code 的服務商與模型</div>
+        </div>
       </header>
       {config && <Guide configPath={config.configPath} />}
-      <nav>
+      <nav className="tabs">
         <button className={tab === "providers" ? "active" : ""} onClick={() => setTab("providers")}>
           服務商
         </button>
