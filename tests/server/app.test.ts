@@ -7,7 +7,7 @@ import { configPath } from "../../src/core/paths";
 import type { FetchLike } from "../../src/core/providers";
 import { createApp, maskKey, slugify } from "../../src/server/app";
 
-const PORT = 4747;
+const PORT = 4141;
 const ORIGIN = `http://127.0.0.1:${PORT}`;
 
 let home: string;

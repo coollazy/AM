@@ -23,7 +23,7 @@ if [ -f "$HOME/Library/LaunchAgents/local.am.server.plist" ]; then
 fi
 
 # 更新前先停止執行中的管理網站
-port=4747
+port=4141
 if [ -f "$PORT_FILE" ]; then
   p=$(sed -n 's/.*"port": *\([0-9][0-9]*\).*/\1/p' "$PORT_FILE" | head -n 1)
   [ -n "$p" ] && port="$p"

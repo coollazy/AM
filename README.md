@@ -79,7 +79,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 ## 設定與安全
 
 - 設定存在 `~/.am/config.json`（Windows：`%USERPROFILE%\.am\config.json`），包含 API key，macOS 上只有你自己能讀取。
-- 管理網站只接受本機連線（`http://127.0.0.1:4747`），並拒絕來自其他網站的請求。
+- 管理網站只接受本機連線（`http://127.0.0.1:4141`），並拒絕來自其他網站的請求。
 - 啟動 Claude Code 時，AM 只會調整下列環境變數，其他環境變數維持不變：
   `ANTHROPIC_BASE_URL`、`ANTHROPIC_AUTH_TOKEN`、`ANTHROPIC_API_KEY`、`ANTHROPIC_MODEL`、`ANTHROPIC_DEFAULT_HAIKU_MODEL`、`CLAUDE_CODE_MAX_OUTPUT_TOKENS`、`CLAUDE_CODE_MAX_CONTEXT_TOKENS`。
 
