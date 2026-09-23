@@ -209,6 +209,18 @@ describe("模型設定", () => {
   });
 });
 
+test("關閉請求會呼叫 onShutdown，且同樣需要通過來源檢查", async () => {
+  let called = 0;
+  const shutdownApp = createApp({ configPath: path, port: PORT, onShutdown: () => called++ });
+  const headers = { host: `127.0.0.1:${PORT}`, "content-type": "application/json" };
+  const evil = await shutdownApp.request("/api/shutdown", { method: "POST", headers: { ...headers, origin: "https://evil.com" }, body: "{}" });
+  expect(evil.status).toBe(403);
+  const ok = await shutdownApp.request("/api/shutdown", { method: "POST", headers: { ...headers, origin: ORIGIN }, body: "{}" });
+  expect(ok.status).toBe(200);
+  await Bun.sleep(80);
+  expect(called).toBe(1);
+});
+
 test("maskKey 與 slugify", () => {
   expect(maskKey("short")).toBe("****");
   expect(maskKey("sk-1234567890")).toBe("sk-****7890");

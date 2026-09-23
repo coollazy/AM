@@ -22,6 +22,28 @@ export async function isServerRunning(port: number): Promise<boolean> {
   }
 }
 
+// 請執行中的網站自行關閉；沒有在執行時回傳 false
+export async function stopServer(port: number): Promise<boolean> {
+  if (!(await isServerRunning(port))) return false;
+  const origin = serverUrl(port).replace(/\/$/, "");
+  try {
+    await fetch(`${origin}/api/shutdown`, {
+      method: "POST",
+      headers: { origin, "content-type": "application/json" },
+      body: "{}",
+      signal: AbortSignal.timeout(2000),
+    });
+  } catch {
+    return false;
+  }
+  const deadline = Date.now() + 3000;
+  while (Date.now() < deadline) {
+    if (!(await isServerRunning(port))) return true;
+    await Bun.sleep(100);
+  }
+  return false;
+}
+
 export function startServerInBackground(): void {
   const [cmd, ...args] = selfCommand();
   const child = spawn(cmd!, [...args, "server"], { detached: true, stdio: "ignore", windowsHide: true });

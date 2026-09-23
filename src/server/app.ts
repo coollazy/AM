@@ -17,13 +17,15 @@ export type AppOptions = {
   configPath: string;
   port: number;
   fetch?: FetchLike;
+  // 收到關閉請求時呼叫（am autostart off 會用來停止執行中的網站）
+  onShutdown?: () => void;
 };
 
 export type PublicProvider =
   | { id: string; type: "subscription"; name: string }
   | { id: string; type: "api"; name: string; baseUrl: string; apiKeyMasked: string; helperModel: string | null };
 
-export function createApp({ configPath, port, fetch }: AppOptions) {
+export function createApp({ configPath, port, fetch, onShutdown }: AppOptions) {
   const app = new Hono();
   app.use("/api/*", localOnly(port));
 
@@ -35,6 +37,12 @@ export function createApp({ configPath, port, fetch }: AppOptions) {
   });
 
   app.get("/api/health", (c) => c.json({ ok: true, app: "am", version: VERSION }));
+
+  app.post("/api/shutdown", (c) => {
+    // 先回應再關閉，讓呼叫端知道已收到
+    setTimeout(() => onShutdown?.(), 50);
+    return c.json({ ok: true });
+  });
 
   app.get("/api/config", async (c) => c.json(toPublic(await loadConfig(configPath))));
 
