@@ -36,7 +36,7 @@ AM（Agent Account Manager）：本機網站管理 Claude Code 的連線設定�
 | 語言 | TypeScript |
 | 執行與打包 | Bun，`bun build --compile` 打包成單一執行檔 |
 | 網站後端 | Hono |
-| 網站前端 | React（Vite 建置，建置結果嵌入執行檔） |
+| 網站前端 | React（由 Bun 內建的 HTML 打包功能建置，嵌入執行檔） |
 | 終端選單 | 自行實作（方向鍵選擇、打字篩選、Tab 切換 1M） |
 | 單元測試 | `bun test` |
 | 支援平台 | macOS（Apple Silicon、Intel）、Windows x64 |
