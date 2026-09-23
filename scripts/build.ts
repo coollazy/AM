@@ -1,4 +1,5 @@
 import { $ } from "bun";
+import { rm } from "node:fs/promises";
 
 // 打包成單一執行檔。預設只打包本機平台；--all 打包所有支援平台
 const TARGETS = [
@@ -32,4 +33,9 @@ for (const { target, outfile } of builds) {
     await $`codesign --verify --strict ${outfile}`;
   }
   console.log(`已打包：${outfile}`);
+}
+
+// Bun 打包偶爾會在專案根目錄留下 .*.bun-build 暫存檔（每個約 60 MB），打包完一併清掉
+for await (const leftover of new Bun.Glob(".*.bun-build").scan({ dot: true })) {
+  await rm(leftover, { force: true });
 }
