@@ -22,3 +22,4 @@
 - 2026-09-23：實測 MixRoute 的 GPT、Gemini 模型可在 Claude Code 中使用
 - 2026-09-23：確定非 Claude 模型採預設保守上限＋網站個別設定
 - 2026-09-23：制定開發規則（工作追蹤、Git、commit 格式、流程、測試、技術棧、需求）
+- 2026-09-23：完成架構設計文件 `docs/architecture.md`

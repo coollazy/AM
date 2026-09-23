@@ -38,12 +38,25 @@ AM（Agent Account Manager）是一套在本機執行的網站，用來管理 Cl
 - 語言：TypeScript
 - 執行與打包：Bun，打包成單一執行檔，使用者不需安裝任何執行環境
 - 支援平台：macOS、Windows（不支援 Linux）
+- 網站後端：Hono；網站前端：React（Vite 建置）
+- 單元測試：`bun test`
 
-> 待補：網站框架、主要第三方套件。
+完整架構見 `docs/architecture.md`。
 
 ## 專案結構
 
-> 待補：目錄結構與各模組職責。
+```
+src/
+  core/       核心邏輯（設定檔、查詢模型、過濾模型、環境變數、啟動 claude），不依賴終端或網站
+  cli/        終端選單與子指令入口
+  server/     網站後端（Hono）
+  web/        網站前端（React）
+  platform/   開機自動執行（macOS、Windows）
+tests/        單元測試，目錄結構對應 src/
+docs/         設計文件
+```
+
+`cli` 與 `server` 只負責介面，邏輯一律放在 `core`。
 
 ## 開發規則
 
@@ -90,4 +103,4 @@ AM（Agent Account Manager）是一套在本機執行的網站，用來管理 Cl
 
 ## 常用指令
 
-> 待補：建置、測試、執行等指令。
+> 專案骨架建立後補上實際指令：安裝套件、執行測試、開發模式、打包執行檔。
