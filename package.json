@@ -10,7 +10,8 @@
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "build": "bun run scripts/build.ts",
-    "build:all": "bun run scripts/build.ts --all"
+    "build:all": "bun run scripts/build.ts --all",
+    "package": "bun run scripts/package.ts"
   },
   "dependencies": {
     "hono": "^4.13.8",

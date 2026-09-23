@@ -208,3 +208,16 @@ CLAUDE_CODE_MAX_CONTEXT_TOKENS
 4. 終端選單（`feature/cli-menu`）
 5. 開機自動執行（`feature/autostart`）
 6. 發佈：打包 macOS、Windows 版本與安裝方式（`feature/release`）
+
+## 12. 發佈與安裝
+
+`bun run package` 產出 `dist/release/am-<版本>-<平台>.zip`（macos-arm64、macos-x64、windows-x64）與 `SHA256SUMS.txt`。每個壓縮檔包含執行檔、安裝腳本、README。
+
+| 平台 | 安裝腳本 | 安裝位置 |
+|---|---|---|
+| macOS | `install.sh`：移除下載隔離標記後複製 | `~/.local/bin/am`（可用 `AM_INSTALL_DIR` 改） |
+| Windows | `install.ps1`：解除封鎖後複製，並加入使用者 PATH | `%LOCALAPPDATA%\Programs\am\am.exe`（可用 `AM_INSTALL_DIR` 改） |
+
+更新時安裝腳本會先呼叫關閉 API 停止執行中的網站再替換執行檔（Windows 執行中的檔案會被鎖住），若原本有開啟開機自動執行，替換後重新執行 `am autostart on`。
+
+Windows 上 `am` 啟動時會將終端機字碼頁切換為 UTF-8，以正確顯示中文。
