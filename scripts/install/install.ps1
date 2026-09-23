@@ -17,7 +17,7 @@ $startupFile = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Sta
 $wasAutostart = Test-Path $startupFile
 
 # 更新前先停止執行中的管理網站，否則執行檔被鎖住無法替換
-$port = 4747
+$port = 4141
 if (Test-Path $configFile) {
   try { $port = (Get-Content $configFile -Raw | ConvertFrom-Json).server.port } catch {}
 }

@@ -44,7 +44,7 @@ export type Config = {
   };
 };
 
-export const DEFAULT_PORT = 4747;
+export const DEFAULT_PORT = 4141;
 
 export function defaultConfig(): Config {
   return {

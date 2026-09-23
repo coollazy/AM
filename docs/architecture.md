@@ -77,7 +77,7 @@ tests/         單元測試，目錄結構對應 src/
 ```json
 {
   "version": 1,
-  "server": { "port": 4747 },
+  "server": { "port": 4141 },
   "providers": [
     { "id": "subscription", "type": "subscription", "name": "Claude 訂閱制" },
     {
@@ -162,7 +162,7 @@ CLAUDE_CODE_MAX_CONTEXT_TOKENS
 
 ## 8. 網站
 
-- 只監聽 `127.0.0.1`，預設埠號 `4747`，可在設定檔修改。
+- 只監聽 `127.0.0.1`，預設埠號 `4141`，可在設定檔修改。
 - `am server` 啟動前先確認網站是否已在執行，已在執行就提示並結束；埠號被其他程式佔用時也提示並結束。
   - 注意：Bun 打包後的執行檔預設允許重複綁定同一埠號，啟動時必須明確設定 `reusePort: false`。
 - 頁面：
