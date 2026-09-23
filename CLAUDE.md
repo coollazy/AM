@@ -111,6 +111,15 @@ bun run start        # 直接執行 am（不打包），例如 bun run start -- 
 bun run dev          # 開發模式執行管理網站（修改後自動重載）
 bun run build        # 打包本機平台執行檔到 dist/am
 bun run build:all    # 打包 macOS（arm64、x64）與 Windows x64 執行檔到 dist/
+bun run package      # 產出給使用者的安裝包（zip＋SHA256SUMS）到 dist/release/
 ```
 
 每次完成功能前必須 `bun test` 與 `bun run typecheck` 都通過。
+
+實際執行測試時，用 `AM_CONFIG_DIR=/tmp/...` 指定暫存設定目錄、`AM_INSTALL_DIR` 指定暫存安裝目錄，不可動到使用者的 `~/.am`、`~/.local/bin`。
+
+### 撰寫注意事項
+
+- Shell／PowerShell 腳本中，變數後面緊接中文時一律加大括號（`${DEST}（`），否則會被當成變數名稱的一部分。
+- `scripts/install/install.ps1` 必須存成帶 BOM 的 UTF-8，Windows PowerShell 5.1 才會正確讀取中文。
+- 在 zsh 中不可用 `path` 當變數名稱（它與 `PATH` 連動）。

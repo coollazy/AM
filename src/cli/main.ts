@@ -5,6 +5,7 @@ import { configPath } from "../core/paths";
 import { PortInUseError, startServer } from "../server/serve";
 import { VERSION } from "../version";
 import { parseArgs } from "./args";
+import { useUtf8Console } from "./console";
 import { runMenu } from "./menu";
 import { NotATerminalError, runPrompt } from "./terminal";
 import { homedir } from "node:os";
@@ -127,6 +128,8 @@ function autostartContext(): AutostartContext {
     uid: process.getuid?.() ?? 0,
   };
 }
+
+useUtf8Console();
 
 try {
   process.exit(await main());
