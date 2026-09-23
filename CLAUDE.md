@@ -9,7 +9,12 @@ AM（Agent Account Manager）是一套在本機執行的網站，用來管理 Cl
 `am` 指令的選單：
 
 - 第一層：選服務商。
-- 第二層：即時向該服務商查詢可用模型後列出供選擇，只列文字對話（LLM）模型，不列圖片、語音、嵌入等其他功能的模型。訂閱制沒有第二層，進入 Claude Code 後用內建的 `/model` 切換。
+- 第二層：即時向該服務商查詢可用模型後列出供選擇，只列文字對話（LLM）模型，不列圖片、語音、嵌入等其他功能的模型（依名稱關鍵字排除，關鍵字可在網站調整）。
+  - 操作：方向鍵選擇，打字即時篩選。
+  - 1M 上下文：在清單中按 `Tab` 切換開／關。支援 1M 的模型名單在網站維護，預設 Opus、Sonnet 系列。
+  - 每個服務商記住上次選擇的模型與 1M 狀態，下次預設停在該選項。
+  - 查詢失敗：自動重試一次，仍失敗則顯示失敗原因，可返回第一層換服務商。
+- 輔助模型（`ANTHROPIC_DEFAULT_HAIKU_MODEL`）：不在選單中選，於網站為每個服務商設定一次（從模型清單下拉選擇）；未設定時自動挑選，清單有 Haiku 用 Haiku，否則用 Sonnet。訂閱制沒有第二層，進入 Claude Code 後用內建的 `/model` 切換。
 
 現有基礎（專案外，已可使用）：
 
@@ -21,6 +26,9 @@ AM（Agent Account Manager）是一套在本機執行的網站，用來管理 Cl
 - MixRoute：`https://api.mixroute.ai` 與 `https://console.mixroute.io` 都能用，`GET /v1/models` 可取得模型清單，`x-api-key` 與 `Authorization: Bearer` 兩種驗證方式都接受。清單裡混有 Gemini、GPT 等非 Claude 模型。
 - LinkAI：`GET /v1/models` 可取得模型清單（8 個，全是 Claude，沒有 Haiku）；`POST /v1/messages` 正常。第一次查詢曾回傳 403「无权访问 AWSB-VIP稳 分组」，重試後正常，代表服務商可能暫時失敗，`am` 查詢要能處理失敗。
 - 兩家都是 new-api 架構的服務。
+- MixRoute 的非 Claude 模型可在 Claude Code 中使用（實測 `gpt-4o-mini`、`gemini-2.5-flash` 的對話與工具呼叫皆成功），但需注意：
+  - Claude Code 預設要求輸出上限 32000 token，超過模型上限會失敗（`gpt-4o-mini` 上限 16384），需設定 `CLAUDE_CODE_MAX_OUTPUT_TOKENS`。
+  - Claude Code 不認識的模型會假設上下文為 200k，可用 `CLAUDE_CODE_MAX_CONTEXT_TOKENS` 指定實際大小。
 
 > 注意：`~/.ai-profiles/` 內含真實 API key，讀取時不可把 key 的值輸出到對話或寫入專案、git。
 

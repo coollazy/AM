@@ -18,3 +18,5 @@
 - 2026-09-23：實測 MixRoute、LinkAI 的模型清單 API
 - 2026-09-23：重測 LinkAI，模型清單與對話 API 皆正常
 - 2026-09-23：確定全名為 Agent Account Manager、支援 macOS 與 Windows、第二層只列 LLM 模型
+- 2026-09-23：確定選單操作、1M 切換、記住上次選擇、查詢失敗處理、輔助模型設定方式
+- 2026-09-23：實測 MixRoute 的 GPT、Gemini 模型可在 Claude Code 中使用
