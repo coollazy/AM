@@ -186,6 +186,10 @@ CLAUDE_CODE_MAX_CONTEXT_TOKENS
 | macOS | 在 `~/Library/LaunchAgents/` 放一個 LaunchAgent 設定，登入時執行 `am server` |
 | Windows | 在使用者的「啟動」資料夾放一個啟動腳本，登入時在背景（不顯示視窗）執行 `am server`；不需系統管理員權限 |
 
+- `am autostart on`：寫入開機設定並立即在背景啟動網站。開機設定記錄的是當下執行檔的完整路徑，移動執行檔後需重新執行一次。
+- `am autostart off`：移除開機設定，並透過網站的關閉 API（`POST /api/shutdown`，同樣經過來源檢查）停止執行中的網站。
+- macOS 網站的輸出記錄在設定目錄下的 `server.log`。
+
 ## 10. 衝突處理
 
 | 狀況 | 處理 |
