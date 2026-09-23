@@ -14,6 +14,7 @@ AM（Agent Account Manager）是一套在本機執行的網站，用來管理 Cl
   - 1M 上下文：在清單中按 `Tab` 切換開／關。支援 1M 的模型名單在網站維護，預設 Opus、Sonnet 系列。
   - 每個服務商記住上次選擇的模型與 1M 狀態，下次預設停在該選項。
   - 查詢失敗：自動重試一次，仍失敗則顯示失敗原因，可返回第一層換服務商。
+- 非 Claude 模型的上限：預設自動套用保守的輸出上限（`CLAUDE_CODE_MAX_OUTPUT_TOKENS=8192`）；網站上為模型個別設定輸出上限（`CLAUDE_CODE_MAX_OUTPUT_TOKENS`）或上下文大小（`CLAUDE_CODE_MAX_CONTEXT_TOKENS`）時，改用個別設定。
 - 輔助模型（`ANTHROPIC_DEFAULT_HAIKU_MODEL`）：不在選單中選，於網站為每個服務商設定一次（從模型清單下拉選擇）；未設定時自動挑選，清單有 Haiku 用 Haiku，否則用 Sonnet。訂閱制沒有第二層，進入 Claude Code 後用內建的 `/model` 切換。
 
 現有基礎（專案外，已可使用）：

@@ -16,7 +16,7 @@
 - [ ] LinkAI 設定檔的 `ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-haiku-4-5` 不在其模型清單中，需確認並修正（優先序：中）
 - [ ] AM 網站開機自動在背景執行（優先序：中）
 - [ ] 提供給其他人安裝的發佈方式（優先序：中）
-- [ ] 非 Claude 模型的輸出上限與上下文大小設定（網站可為模型設定 `CLAUDE_CODE_MAX_OUTPUT_TOKENS`、`CLAUDE_CODE_MAX_CONTEXT_TOKENS`）（優先序：中）
+- [ ] 非 Claude 模型預設套用輸出上限 8192，網站可為模型個別設定輸出上限與上下文大小（優先序：中）
 - [ ] 訂閱制設定檔改成清除所有 `ANTHROPIC_*` 變數，目前只清除其他設定檔有用到的 5 個（優先序：低）
 - [ ] `am` 選單只讀取設定檔名稱，不執行整個設定檔，避免變數殘留到其他方案（優先序：低）
 - [ ] 考慮把 API key 搬進 macOS 鑰匙圈（優先序：低）
