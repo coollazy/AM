@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { runMenu, type MenuDeps } from "../../src/cli/menu";
+import { CLAUDE_NOT_INSTALLED, runMenu, type MenuDeps } from "../../src/cli/menu";
 import { currentItem, type PromptResult, type PromptState } from "../../src/cli/prompt";
 import { defaultConfig, type ApiProvider, type Config } from "../../src/core/config";
 import type { ModelListResult } from "../../src/core/providers";
@@ -16,6 +16,7 @@ function harness(config: Config, answers: Answer[], models: Record<string, Model
   const saved: Array<[string, unknown]> = [];
   const logs: string[] = [];
   const deps: MenuDeps = {
+    claudeInstalled: () => true,
     loadConfig: async () => structuredClone(config),
     saveSelection: async (id, sel) => {
       saved.push([id, sel]);
@@ -131,6 +132,14 @@ describe("runMenu", () => {
     const h = harness(config, []);
     expect(await runMenu(h.deps, [])).toBe(1);
     expect(h.logs).toEqual(["尚未設定任何服務商，請執行 am web 開啟管理網站新增。"]);
+  });
+
+  test("沒有安裝 Claude Code 時直接提示，不顯示選單", async () => {
+    const h = harness(configWith(mixroute), []);
+    h.deps.claudeInstalled = () => false;
+    expect(await runMenu(h.deps, [])).toBe(1);
+    expect(h.prompts).toHaveLength(0);
+    expect(h.logs).toEqual([CLAUDE_NOT_INSTALLED]);
   });
 
   test("回傳 claude 的結束代碼", async () => {

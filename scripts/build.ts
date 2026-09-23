@@ -1,3 +1,5 @@
+import { $ } from "bun";
+
 // 打包成單一執行檔。預設只打包本機平台；--all 打包所有支援平台
 const TARGETS = [
   { target: "bun-darwin-arm64", outfile: "dist/am-macos-arm64" },
@@ -18,6 +20,16 @@ for (const { target, outfile } of builds) {
   if (!result.success) {
     for (const log of result.logs) console.error(log);
     process.exit(1);
+  }
+  // 打包會改動執行檔內容，使原本的簽章失效；macOS 會拒絕執行簽章無效的下載檔案，所以重新做臨時簽章
+  const isMac = target ? target.startsWith("bun-darwin") : process.platform === "darwin";
+  if (isMac) {
+    if (process.platform !== "darwin") {
+      console.error("macOS 執行檔必須在 macOS 上打包，才能重新簽章");
+      process.exit(1);
+    }
+    await $`codesign --force --sign - ${outfile}`.quiet();
+    await $`codesign --verify --strict ${outfile}`;
   }
   console.log(`已打包：${outfile}`);
 }

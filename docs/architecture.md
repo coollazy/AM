@@ -214,13 +214,36 @@ CLAUDE_CODE_MAX_CONTEXT_TOKENS
 
 ## 12. 發佈與安裝
 
-`bun run package` 產出 `dist/release/am-<版本>-<平台>.zip`（macos-arm64、macos-x64、windows-x64）與 `SHA256SUMS.txt`。每個壓縮檔包含執行檔、安裝腳本、README。
+### 發佈
 
-| 平台 | 安裝腳本 | 安裝位置 |
+推送版本 tag（`v<版本>`）時，GitHub Actions（`.github/workflows/release.yml`，在 macOS 機器上執行）會：檢查 tag 與 `package.json` 版本一致 → 單元測試 → 型別檢查 → `bun run package` → 建立 GitHub Release 並上傳安裝包。
+
+`bun run package` 產出 `dist/release/am-<平台>.zip`（macos-arm64、macos-x64、windows-x64）與 `SHA256SUMS.txt`。檔名不含版本號，才能用固定網址 `releases/latest/download/<檔名>` 下載最新版。每個壓縮檔包含執行檔、安裝腳本、README。
+
+macOS 執行檔：打包會改動執行檔內容，使原本的簽章失效，而 macOS 會拒絕執行簽章無效的下載檔案。因此打包後以 `codesign --force --sign -` 重新做臨時簽章，並以 `codesign --verify --strict` 檢查；這一步只能在 macOS 上執行。
+
+### 安裝
+
+| 平台 | 一行指令 | 安裝位置 |
 |---|---|---|
-| macOS | `install.sh`：移除下載隔離標記後複製 | `~/.local/bin/am`（可用 `AM_INSTALL_DIR` 改） |
-| Windows | `install.ps1`：解除封鎖後複製，並加入使用者 PATH | `%LOCALAPPDATA%\Programs\am\am.exe`（可用 `AM_INSTALL_DIR` 改） |
+| macOS | `curl -fsSL https://raw.githubusercontent.com/coollazy/AM/master/scripts/install/install.sh \| sh` | `~/.local/bin/am` |
+| Windows | `irm https://raw.githubusercontent.com/coollazy/AM/master/scripts/install/install.ps1 \| iex` | `%LOCALAPPDATA%\Programs\am\am.exe` |
 
-更新時安裝腳本會先呼叫關閉 API 停止執行中的網站再替換執行檔（Windows 執行中的檔案會被鎖住），若原本有開啟開機自動執行，替換後重新執行 `am autostart on`。
+安裝腳本（`scripts/install/`）同時支援兩種用法：一行指令執行時從 GitHub Releases 下載；在解壓縮後的安裝包資料夾中執行時，安裝旁邊的執行檔。流程：
+
+1. 判斷電腦類型（macOS 以 `hw.optional.arm64` 判斷，避免在 Rosetta 下誤判），下載壓縮檔與 `SHA256SUMS.txt` 並核對檢查碼。
+2. 移除下載標記（macOS 隔離屬性、Windows `Unblock-File`）。
+3. 若管理網站執行中，先呼叫關閉 API 停止（Windows 執行中的檔案會被鎖住）。
+4. 替換執行檔。
+5. 設定 PATH：macOS 依使用者的 shell 寫入 `~/.zshrc`、`~/.bash_profile` 或 `~/.profile`（已存在則不重複寫入）；Windows 寫入使用者 PATH 並更新目前視窗。
+6. 原本有開機自動執行 → 重新執行 `am autostart on`；原本網站手動執行中 → 重新啟動；全新安裝 → 詢問是否開啟開機自動執行、是否開啟管理網站（預設「是」）。
+
+可用環境變數：`AM_VERSION`（指定版本）、`AM_INSTALL_DIR`（安裝目錄）、`AM_NO_PROMPT=1`（不詢問）、`AM_NO_MODIFY_PATH=1`（macOS 不修改 shell 設定檔）、`AM_DOWNLOAD_URL`（下載位置，可指向鏡像站或測試伺服器）。
+
+Windows 編碼：`irm | iex` 下載的腳本以 UTF-8 解讀（GitHub raw 回應帶 `charset=utf-8`），儲存庫中的 `install.ps1` 不加 BOM；壓縮檔內的 `install.ps1` 以 `powershell -File` 執行，Windows PowerShell 5.1 需要 BOM 才會正確讀取中文，由 `scripts/package.ts` 打包時加上。一行指令執行時腳本跑在使用者目前的 PowerShell 中，出錯只能用 `throw`，不可用 `exit`（會關掉視窗）。
 
 Windows 上 `am` 啟動時會將終端機字碼頁切換為 UTF-8，以正確顯示中文。
+
+### 啟動前檢查
+
+`am` 選單開始前先確認找得到 `claude` 指令，找不到就提示安裝 Claude Code 並結束，避免選完服務商與模型才發現沒安裝。
