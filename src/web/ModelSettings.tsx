@@ -94,7 +94,7 @@ export function ModelSettings({ config, onChange }: { config: PublicConfig; onCh
                     <input type="number" min={1} value={r.maxContextTokens} onChange={(e) => updateRow(i, { maxContextTokens: e.target.value })} placeholder="不設定" />
                   </td>
                   <td>
-                    <button type="button" className="small danger" onClick={() => setLimits((rows) => rows.filter((_, j) => j !== i))}>
+                    <button type="button" className="btn-danger" onClick={() => setLimits((rows) => rows.filter((_, j) => j !== i))}>
                       移除
                     </button>
                   </td>
@@ -105,15 +105,15 @@ export function ModelSettings({ config, onChange }: { config: PublicConfig; onCh
         </div>
         <div className="hint">個別設定會取代預設值；所有服務商共用。</div>
         <div className="footer-actions">
-          <button type="button" className="small" onClick={() => setLimits((rows) => [...rows, { model: "", maxOutputTokens: "", maxContextTokens: "" }])}>
+          <button type="button" className="btn-soft" onClick={() => setLimits((rows) => [...rows, { model: "", maxOutputTokens: "", maxContextTokens: "" }])}>
             新增一列
           </button>
         </div>
       </section>
 
-      {message && <p className={message.ok ? "success" : "error"}>{message.text}</p>}
-      <div className="footer-actions">
-        <button className="primary" type="submit" disabled={saving}>
+      <div className="footer-actions save-bar">
+        {message && <span className={message.ok ? "success" : "error"}>{message.text}</span>}
+        <button className="btn-primary" type="submit" disabled={saving}>
           {saving ? "儲存中…" : "儲存模型設定"}
         </button>
       </div>

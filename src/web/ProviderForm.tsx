@@ -71,6 +71,7 @@ export function ProviderForm({ provider, canAddSubscription, onCancel, onSaved }
           <label>
             <span>API 網址</span>
             <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://api.example.com" required />
+            <div className="hint">服務商提供的 API 網址，通常可以在服務商的說明文件或後台找到。</div>
           </label>
           <label>
             <span>API key</span>
@@ -82,9 +83,10 @@ export function ProviderForm({ provider, canAddSubscription, onCancel, onSaved }
               required={isNew}
               autoComplete="off"
             />
+            <div className="hint">在服務商後台建立的金鑰，只會存在這台電腦。</div>
           </label>
           <div className="inline">
-            <button type="button" onClick={testConnection} disabled={testing || baseUrl.trim() === "" || (isNew && apiKey.trim() === "")}>
+            <button type="button" className="btn-soft" onClick={testConnection} disabled={testing || baseUrl.trim() === "" || (isNew && apiKey.trim() === "")}>
               {testing ? "測試中…" : "測試連線"}
             </button>
             {models?.ok && (
@@ -95,7 +97,7 @@ export function ProviderForm({ provider, canAddSubscription, onCancel, onSaved }
             {models && !models.ok && <span className="error">連線失敗：{models.error}</span>}
           </div>
           {models?.ok && models.models.length > 0 && <div className="models">{models.models.join("、")}</div>}
-          <label style={{ marginTop: 14 }}>
+          <label style={{ marginTop: 18 }}>
             <span>輔助模型（Claude Code 處理小任務時使用）</span>
             <select value={helperModel} onChange={(e) => setHelperModel(e.target.value)}>
               <option value="">自動（有 Haiku 用 Haiku，否則用 Sonnet）</option>
@@ -111,10 +113,10 @@ export function ProviderForm({ provider, canAddSubscription, onCancel, onSaved }
       )}
       {error && <p className="error">{error}</p>}
       <div className="footer-actions">
-        <button type="button" onClick={onCancel}>
+        <button type="button" className="btn-soft" onClick={onCancel}>
           取消
         </button>
-        <button className="primary" type="submit" disabled={saving}>
+        <button className="btn-primary" type="submit" disabled={saving}>
           {saving ? "儲存中…" : "儲存"}
         </button>
       </div>

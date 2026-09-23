@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, type PublicConfig, type PublicProvider } from "./api";
+import { MoreIcon, PlusIcon, UserIcon } from "./icons";
 import { ProviderForm } from "./ProviderForm";
 
 type Editing = { mode: "new" } | { mode: "edit"; provider: PublicProvider } | null;
 
 export function Providers({ config, onChange }: { config: PublicConfig; onChange: (c: PublicConfig) => void }) {
   const [editing, setEditing] = useState<Editing>(null);
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const providers = config.providers;
 
@@ -41,57 +41,133 @@ export function Providers({ config, onChange }: { config: PublicConfig; onChange
   }
 
   return (
-    <section className="panel">
-      <h2>服務商</h2>
-      <p className="hint">終端機執行 am 時會依這裡的順序列出。</p>
-      {providers.length === 0 && <p className="hint">尚未設定任何服務商。</p>}
+    <section>
+      <div className="section-head">
+        <div>
+          <h2>服務商</h2>
+          <p>終端機選單會依這個順序列出</p>
+        </div>
+        <button className="btn-primary" onClick={() => setEditing({ mode: "new" })}>
+          <PlusIcon />
+          新增服務商
+        </button>
+      </div>
+      {providers.length === 0 && <div className="empty">還沒有服務商，按「新增服務商」開始設定。</div>}
       {providers.map((p, i) => (
-        <div className="row" key={p.id}>
+        <div className="card" key={p.id}>
+          <div className={`avatar c${p.type === "subscription" ? 0 : 1 + (i % 3)}`}>
+            {p.type === "subscription" ? <UserIcon /> : initial(p.name)}
+          </div>
           <div className="info">
             <div className="name">
               {p.name}
-              <span className="tag">{p.type === "subscription" ? "訂閱制" : "API"}</span>
+              <span className={p.type === "subscription" ? "badge sub" : "badge"}>{p.type === "subscription" ? "訂閱制" : "API"}</span>
             </div>
-            {p.type === "api" && (
-              <div className="meta">
-                {p.baseUrl} · key {p.apiKeyMasked} · 輔助模型 {p.helperModel ?? "自動"}
-              </div>
-            )}
-            {p.type === "subscription" && <div className="meta">使用 Claude 帳號登入，進入 Claude Code 後用 /model 切換模型</div>}
+            <div className="meta">{p.type === "subscription" ? "使用你的 Claude 帳號登入" : `${hostOf(p.baseUrl)} · 輔助模型：${p.helperModel ?? "自動"}`}</div>
           </div>
-          <div className="actions">
-            <button className="small" disabled={i === 0} onClick={() => move(i, -1)} aria-label="上移">
-              ↑
-            </button>
-            <button className="small" disabled={i === providers.length - 1} onClick={() => move(i, 1)} aria-label="下移">
-              ↓
-            </button>
-            <button className="small" onClick={() => setEditing({ mode: "edit", provider: p })}>
+          <div className="card-actions">
+            <button className="btn-soft" onClick={() => setEditing({ mode: "edit", provider: p })}>
               編輯
             </button>
-            {confirmDelete === p.id ? (
-              <>
-                <button className="small danger" onClick={() => run(() => api.deleteProvider(p.id)).then(() => setConfirmDelete(null))}>
-                  確定刪除
-                </button>
-                <button className="small" onClick={() => setConfirmDelete(null)}>
-                  取消
-                </button>
-              </>
-            ) : (
-              <button className="small danger" onClick={() => setConfirmDelete(p.id)}>
-                刪除
-              </button>
-            )}
+            <MoreMenu
+              canMoveUp={i > 0}
+              canMoveDown={i < providers.length - 1}
+              onMoveUp={() => move(i, -1)}
+              onMoveDown={() => move(i, 1)}
+              onDelete={() => run(() => api.deleteProvider(p.id))}
+            />
           </div>
         </div>
       ))}
       {error && <p className="error">{error}</p>}
-      <div className="footer-actions">
-        <button className="primary" onClick={() => setEditing({ mode: "new" })}>
-          新增服務商
-        </button>
-      </div>
     </section>
   );
+}
+
+type MoreMenuProps = {
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onDelete: () => void;
+};
+
+function MoreMenu({ canMoveUp, canMoveDown, onMoveUp, onMoveDown, onDelete }: MoreMenuProps) {
+  const [open, setOpen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // 點選單外面或按 Esc 關閉
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) close();
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  function close() {
+    setOpen(false);
+    setConfirming(false);
+  }
+
+  function pick(action: () => void) {
+    close();
+    action();
+  }
+
+  return (
+    <div ref={ref}>
+      <button className="btn-icon" aria-label="更多操作" aria-expanded={open} onClick={() => (open ? close() : setOpen(true))}>
+        <MoreIcon />
+      </button>
+      {open && (
+        <div className="menu" role="menu">
+          {confirming ? (
+            <>
+              <div className="confirm">確定要刪除嗎？</div>
+              <div className="confirm-actions">
+                <button className="btn-soft" onClick={() => setConfirming(false)}>
+                  取消
+                </button>
+                <button className="btn-danger" onClick={() => pick(onDelete)}>
+                  刪除
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <button role="menuitem" disabled={!canMoveUp} onClick={() => pick(onMoveUp)}>
+                上移
+              </button>
+              <button role="menuitem" disabled={!canMoveDown} onClick={() => pick(onMoveDown)}>
+                下移
+              </button>
+              <button role="menuitem" className="danger" onClick={() => setConfirming(true)}>
+                刪除
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function initial(name: string): string {
+  return [...name.trim()][0]?.toUpperCase() ?? "?";
+}
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url;
+  }
 }
