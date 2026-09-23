@@ -17,3 +17,4 @@
 - 2026-09-23：確定輕量流程、必須有測試、TypeScript＋Bun、`am` 指令名稱與兩層選單
 - 2026-09-23：實測 MixRoute、LinkAI 的模型清單 API
 - 2026-09-23：重測 LinkAI，模型清單與對話 API 皆正常
+- 2026-09-23：確定全名為 Agent Account Manager、支援 macOS 與 Windows、第二層只列 LLM 模型
