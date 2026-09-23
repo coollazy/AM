@@ -16,3 +16,4 @@
 - 2026-09-23：確定 Git 分支、commit 格式規則與 AM 專案目標，寫入 `CLAUDE.md`
 - 2026-09-23：確定輕量流程、必須有測試、TypeScript＋Bun、`am` 指令名稱與兩層選單
 - 2026-09-23：實測 MixRoute、LinkAI 的模型清單 API
+- 2026-09-23：重測 LinkAI，模型清單與對話 API 皆正常

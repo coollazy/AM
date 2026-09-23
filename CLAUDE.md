@@ -19,7 +19,7 @@ AM 是一套在本機執行的網站，用來管理 Claude Code 的連線設定�
 服務商 API 查詢結果（2026-09-23）：
 
 - MixRoute：`https://api.mixroute.ai` 與 `https://console.mixroute.io` 都能用，`GET /v1/models` 可取得模型清單，`x-api-key` 與 `Authorization: Bearer` 兩種驗證方式都接受。清單裡混有 Gemini、GPT 等非 Claude 模型。
-- LinkAI：`GET /v1/models` 回傳 403「无权访问 AWSB-VIP稳 分组」，key 目前沒有權限讀取模型清單。
+- LinkAI：`GET /v1/models` 可取得模型清單（8 個，全是 Claude，沒有 Haiku）；`POST /v1/messages` 正常。第一次查詢曾回傳 403「无权访问 AWSB-VIP稳 分组」，重試後正常，代表服務商可能暫時失敗，`am` 查詢要能處理失敗。
 - 兩家都是 new-api 架構的服務。
 
 > 注意：`~/.ai-profiles/` 內含真實 API key，讀取時不可把 key 的值輸出到對話或寫入專案、git。
