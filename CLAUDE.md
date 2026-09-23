@@ -17,7 +17,7 @@ AM（Agent Account Manager）是一套在本機執行的網站，用來管理 Cl
 - 非 Claude 模型的上限：預設自動套用保守的輸出上限（`CLAUDE_CODE_MAX_OUTPUT_TOKENS=8192`）；網站上為模型個別設定輸出上限（`CLAUDE_CODE_MAX_OUTPUT_TOKENS`）或上下文大小（`CLAUDE_CODE_MAX_CONTEXT_TOKENS`）時，改用個別設定。
 - 輔助模型（`ANTHROPIC_DEFAULT_HAIKU_MODEL`）：不在選單中選，於網站為每個服務商設定一次（從模型清單下拉選擇）；未設定時自動挑選，清單有 Haiku 用 Haiku，否則用 Sonnet。訂閱制沒有第二層，進入 Claude Code 後用內建的 `/model` 切換。
 
-現有基礎（專案外，已可使用）：
+使用者既有的舊工具（專案外）。**不可修改、不可刪除、AM 也不自動匯入**，使用者會在 AM 網站上從零手動設定：
 
 - `~/.local/bin/ai`：終端機選單，選擇設定檔後啟動 `claude`。
 - `~/.ai-profiles/*.sh`：每個設定檔一支，內含 `AI_NAME` 與 `ANTHROPIC_*` 環境變數，含真實 API key。
@@ -83,7 +83,8 @@ AM（Agent Account Manager）是一套在本機執行的網站，用來管理 Cl
 ### 開發流程
 
 - 採輕量流程：需求討論清楚後直接開發，不另寫正式規格文件。
-- 每個功能都必須有自動化測試，測試全部通過才算完成。
+- 每個功能都必須有單元測試，測試全部通過才算完成。
+- 單元測試不可連線到任何外部服務，一律使用模擬資料；模擬資料要餵給正式程式碼處理，不可另寫一套與正式程式碼無關的假邏輯。
 
 > 其餘規則待制定。
 
