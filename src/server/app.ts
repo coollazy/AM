@@ -50,6 +50,10 @@ export function createApp({ configPath, port, fetch, onShutdown }: AppOptions) {
   app.post("/api/providers", async (c) => {
     const body = await readJson(c.req.raw);
     const config = await updateConfig(configPath, (config) => {
+      // Claude Code 只有一份登入資料，多個訂閱制項目效果相同，所以只允許一個
+      if (body.type === "subscription" && config.providers.some((p) => p.type === "subscription")) {
+        throw new BadRequest("已經有 Claude 訂閱制，不能重複新增");
+      }
       const id = uniqueId(slugify(String(body.name ?? "")), config.providers);
       const provider = normalizeProvider({ ...body, id, helperModel: emptyToNull(body.helperModel) });
       config.providers.push(provider);

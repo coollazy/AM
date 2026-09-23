@@ -131,6 +131,15 @@ describe("服務商管理", () => {
     });
   });
 
+  test("已經有訂閱制時不能再新增，刪除後可以重新加回", async () => {
+    const res = await call("POST", "/api/providers", { type: "subscription", name: "另一個訂閱" });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("已經有 Claude 訂閱制，不能重複新增");
+    await call("DELETE", "/api/providers/subscription");
+    expect((await call("POST", "/api/providers", { type: "subscription", name: "Claude 訂閱制" })).status).toBe(201);
+    expect((await loadConfig(path)).providers.filter((p) => p.type === "subscription")).toHaveLength(1);
+  });
+
   test("可以改訂閱制的名稱", async () => {
     await call("PUT", "/api/providers/subscription", { name: "我的訂閱" });
     expect((await loadConfig(path)).providers[0]).toEqual({ id: "subscription", type: "subscription", name: "我的訂閱" });

@@ -3,11 +3,13 @@ import { api, type ModelsResult, type PublicConfig, type PublicProvider } from "
 
 type Props = {
   provider: PublicProvider | null;
+  // 已經有訂閱制時不能再新增
+  canAddSubscription: boolean;
   onCancel: () => void;
   onSaved: (config: PublicConfig) => void;
 };
 
-export function ProviderForm({ provider, onCancel, onSaved }: Props) {
+export function ProviderForm({ provider, canAddSubscription, onCancel, onSaved }: Props) {
   const isNew = provider === null;
   const [type, setType] = useState<"api" | "subscription">(provider?.type ?? "api");
   const [name, setName] = useState(provider?.name ?? "");
@@ -51,7 +53,7 @@ export function ProviderForm({ provider, onCancel, onSaved }: Props) {
   return (
     <form className="panel" onSubmit={submit}>
       <h2>{isNew ? "新增服務商" : `編輯「${provider.name}」`}</h2>
-      {isNew && (
+      {isNew && canAddSubscription && (
         <label>
           <span>類型</span>
           <select value={type} onChange={(e) => setType(e.target.value as "api" | "subscription")}>
