@@ -90,7 +90,7 @@ tests/         單元測試，目錄結構對應 src/
     }
   ],
   "models": {
-    "excludeKeywords": ["image", "tts", "transcribe", "embedding", "audio", "whisper", "dall-e", "realtime", "moderation"],
+    "excludeKeywords": ["image", "tts", "transcribe", "embedding", "audio", "whisper", "dall-e", "realtime", "moderation", "sora", "veo"],
     "oneMillionPatterns": ["claude-opus-*", "claude-sonnet-*"],
     "defaultMaxOutputTokens": 8192,
     "limits": {
