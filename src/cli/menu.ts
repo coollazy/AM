@@ -5,6 +5,8 @@ import type { ModelListResult } from "../core/providers";
 import { createPrompt, type PromptResult, type PromptState } from "./prompt";
 
 export type MenuDeps = {
+  // 是否找得到 claude 指令；選單開始前先檢查，避免選完才發現沒安裝
+  claudeInstalled: () => boolean;
   loadConfig: () => Promise<Config>;
   saveSelection: (providerId: string, selection?: { model: string; oneMillion: boolean }) => Promise<void>;
   fetchModels: (provider: ApiProvider) => Promise<ModelListResult>;
@@ -16,7 +18,15 @@ export type MenuDeps = {
 };
 
 // 兩層選單：選服務商 → （API 服務商）選模型 → 啟動 Claude Code。回傳結束代碼
+export const CLAUDE_NOT_INSTALLED = `找不到 Claude Code（claude 指令）。
+請先安裝 Claude Code：https://claude.com/claude-code
+安裝完成後重新開啟終端機，再執行 am。`;
+
 export async function runMenu(deps: MenuDeps, claudeArgs: string[]): Promise<number> {
+  if (!deps.claudeInstalled()) {
+    deps.log(CLAUDE_NOT_INSTALLED);
+    return 1;
+  }
   let notice: string | undefined;
   while (true) {
     const config = await deps.loadConfig();

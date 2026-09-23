@@ -116,10 +116,12 @@ bun run package      # 產出給使用者的安裝包（zip＋SHA256SUMS）到 d
 
 每次完成功能前必須 `bun test` 與 `bun run typecheck` 都通過。
 
-實際執行測試時，用 `AM_CONFIG_DIR=/tmp/...` 指定暫存設定目錄、`AM_INSTALL_DIR` 指定暫存安裝目錄，不可動到使用者的 `~/.am`、`~/.local/bin`。
+實際執行測試時，用 `AM_CONFIG_DIR=/tmp/...` 指定暫存設定目錄、`AM_INSTALL_DIR` 指定暫存安裝目錄、`HOME` 指定暫存家目錄（安裝腳本會修改 `~/.zshrc`），不可動到使用者的 `~/.am`、`~/.local/bin`、`~/.zshrc`。暫存設定要另外指定埠號（例如 4999），否則安裝腳本會把使用者正在執行的管理網站當成要更新的對象停掉。
 
 ### 撰寫注意事項
 
 - Shell／PowerShell 腳本中，變數後面緊接中文時一律加大括號（`${DEST}（`），否則會被當成變數名稱的一部分。
-- `scripts/install/install.ps1` 必須存成帶 BOM 的 UTF-8，Windows PowerShell 5.1 才會正確讀取中文。
+- 儲存庫中的 `scripts/install/install.ps1` 不加 BOM（給 `irm | iex` 使用）；壓縮檔內的版本由 `scripts/package.ts` 加上 BOM（給 Windows PowerShell 5.1 以 `-File` 執行）。
+- `install.ps1` 可能以 `irm | iex` 在使用者目前的 PowerShell 中執行，出錯一律用 `throw`，不可用 `exit`。
+- macOS 執行檔打包後必須重新臨時簽章（`scripts/build.ts` 已處理），所以 macOS 版只能在 macOS 上打包。
 - 在 zsh 中不可用 `path` 當變數名稱（它與 `PATH` 連動）。

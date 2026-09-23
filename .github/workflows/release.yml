@@ -1,0 +1,48 @@
+# 推送版本 tag（例如 v0.1.0）時自動測試、打包並建立 GitHub Release
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    # macOS 執行檔需要在 macOS 上重新簽章，所以在 macOS 機器上打包（Windows 版可在 macOS 上交叉編譯）
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+
+      - name: 安裝套件
+        run: bun install --frozen-lockfile
+
+      - name: 檢查 tag 與 package.json 版本一致
+        run: |
+          version=$(bun -e 'console.log(require("./package.json").version)')
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "tag $GITHUB_REF_NAME 與 package.json 版本 v$version 不一致"
+            exit 1
+          fi
+
+      - name: 單元測試
+        run: bun test
+
+      - name: 型別檢查
+        run: bun run typecheck
+
+      - name: 打包
+        run: bun run package
+
+      - name: 建立 Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/release/* \
+            --title "AM $GITHUB_REF_NAME" \
+            --generate-notes

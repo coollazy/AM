@@ -11,31 +11,41 @@
 
 ## 安裝
 
-下載符合你電腦的壓縮檔並解壓縮：
+**macOS**：打開「終端機」，貼上這行後按 Enter：
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/coollazy/AM/master/scripts/install/install.sh | sh
+```
+
+**Windows**：打開「PowerShell」，貼上這行後按 Enter：
+
+```powershell
+irm https://raw.githubusercontent.com/coollazy/AM/master/scripts/install/install.ps1 | iex
+```
+
+安裝腳本會自動判斷電腦類型、下載最新版、檢查檔案完整性並設定好 PATH，最後詢問要不要開啟開機自動執行、要不要立即打開管理網站。
+
+- macOS 安裝到 `~/.local/bin/am`，Windows 安裝到 `%LOCALAPPDATA%\Programs\am\am.exe`。
+- macOS 安裝後請**新開一個終端機視窗**再使用 `am`；Windows 在同一個視窗就能直接使用。
+- **更新**：重新執行同一行指令即可。會先停止執行中的管理網站再替換，並保留開機自動執行的設定。
+- **安裝指定版本**：macOS 在 `sh` 前加上 `AM_VERSION=v0.1.0`，例如 `curl -fsSL … | AM_VERSION=v0.1.0 sh`；Windows 先執行 `$env:AM_VERSION="v0.1.0"`。
+
+<details>
+<summary>不想用一行指令？手動下載安裝</summary>
+
+到 [Releases](https://github.com/coollazy/AM/releases/latest) 下載符合你電腦的壓縮檔並解壓縮：
 
 | 電腦 | 檔案 |
 |---|---|
-| Mac（Apple 晶片，M1 之後） | `am-<版本>-macos-arm64.zip` |
-| Mac（Intel） | `am-<版本>-macos-x64.zip` |
-| Windows | `am-<版本>-windows-x64.zip` |
+| Mac（Apple 晶片，M1 之後） | `am-macos-arm64.zip` |
+| Mac（Intel） | `am-macos-x64.zip` |
+| Windows | `am-windows-x64.zip` |
 
-**macOS**：在終端機進入解壓縮後的資料夾，執行：
+- macOS：在終端機進入解壓縮後的資料夾，執行 `./install.sh`。
+- Windows：在 PowerShell 進入解壓縮後的資料夾，執行 `powershell -ExecutionPolicy Bypass -File .\install.ps1`。Windows 可能跳出「Windows 已保護您的電腦」，點「其他資訊」→「仍要執行」。
 
-```sh
-./install.sh
-```
-
-會安裝到 `~/.local/bin/am`。如果畫面提示該目錄不在 PATH 中，照提示加入 `~/.zshrc` 後重新開啟終端機。
-
-**Windows**：在 PowerShell 中進入解壓縮後的資料夾，執行：
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1
-```
-
-會安裝到 `%LOCALAPPDATA%\Programs\am\am.exe` 並加入 PATH，完成後重新開啟終端機。Windows 可能跳出「Windows 已保護您的電腦」提示，點「其他資訊」→「仍要執行」。
-
-**更新**：下載新版後同樣執行安裝腳本即可。腳本會先停止執行中的管理網站再替換，並保留開機自動執行的設定。
+可用 `SHA256SUMS.txt` 核對下載檔案是否完整。
+</details>
 
 ## 使用
 
@@ -94,5 +104,11 @@ bun run typecheck     # 型別檢查
 bun run dev           # 開發模式執行管理網站
 bun run package       # 產出所有平台的安裝包到 dist/release/
 ```
+
+### 發布新版本
+
+1. 更新 `package.json` 的 `version`，合併到 `master`。
+2. 打上相同版本的 tag 並推送，例如 `git tag v0.1.0 && git push origin master v0.1.0`。
+3. GitHub Actions（`.github/workflows/release.yml`）會自動測試、打包並建立 Release。
 
 架構說明見 [`docs/architecture.md`](docs/architecture.md)。

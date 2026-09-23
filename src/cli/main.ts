@@ -1,5 +1,5 @@
 import { ConfigError, loadConfig, updateConfig } from "../core/config";
-import { ClaudeNotFoundError, launchClaude } from "../core/launch";
+import { ClaudeNotFoundError, launchClaude, resolveClaudeCommand } from "../core/launch";
 import { fetchModels } from "../core/providers";
 import { configPath } from "../core/paths";
 import { PortInUseError, startServer } from "../server/serve";
@@ -95,6 +95,14 @@ async function main(): Promise<number> {
       const path = configPath();
       return runMenu(
         {
+          claudeInstalled: () => {
+            try {
+              resolveClaudeCommand(Bun.which, process.platform, process.env as Record<string, string>);
+              return true;
+            } catch {
+              return false;
+            }
+          },
           loadConfig: () => loadConfig(path),
           saveSelection: async (providerId, selection) => {
             await updateConfig(path, (config) => {
