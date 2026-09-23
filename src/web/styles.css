@@ -61,8 +61,8 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 600; letter-spacing: 0.2px;
 button { font: inherit; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: none; color: var(--text); }
 button svg { width: 16px; height: 16px; }
 button:disabled { opacity: 0.45; cursor: default; }
-.btn-primary { background: var(--text); color: var(--card); padding: 11px 18px; border-radius: 99px; font-weight: 600; }
-.btn-primary:hover:not(:disabled) { background: #0f2220; }
+.btn-primary { background: var(--accent); color: #fff; padding: 11px 18px; border-radius: 99px; font-weight: 600; }
+.btn-primary:hover:not(:disabled) { background: var(--accent-text); }
 .btn-soft { background: var(--chip); color: var(--strip-text); padding: 8px 14px; border-radius: 99px; }
 .btn-soft:hover:not(:disabled) { background: var(--strip); }
 .btn-danger { background: var(--danger-soft); color: var(--danger); padding: 8px 14px; border-radius: 99px; }
