@@ -30,6 +30,7 @@ export function Providers({ config, onChange }: { config: PublicConfig; onChange
     return (
       <ProviderForm
         provider={editing.mode === "edit" ? editing.provider : null}
+        canAddSubscription={!providers.some((p) => p.type === "subscription")}
         onCancel={() => setEditing(null)}
         onSaved={(c) => {
           onChange(c);
