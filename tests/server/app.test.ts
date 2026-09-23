@@ -22,7 +22,7 @@ const fakeFetch: FetchLike = async (url, init) => {
 
 beforeEach(async () => {
   home = await mkdtemp(join(tmpdir(), "am-web-"));
-  path = configPath(home);
+  path = configPath(home, {});
   providerResponses = [];
   providerCalls = [];
 });
