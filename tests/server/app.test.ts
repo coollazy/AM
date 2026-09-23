@@ -83,9 +83,10 @@ describe("安全檢查", () => {
 });
 
 describe("服務商管理", () => {
-  test("預設只有訂閱制", async () => {
+  test("預設只有訂閱制，並回傳設定檔位置", async () => {
     const res = await call("GET", "/api/config");
     const body = await res.json();
+    expect(body.configPath).toBe(path);
     expect(body.providers).toEqual([{ id: "subscription", type: "subscription", name: "Claude 訂閱制" }]);
   });
 

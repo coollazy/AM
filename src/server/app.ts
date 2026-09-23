@@ -44,7 +44,7 @@ export function createApp({ configPath, port, fetch, onShutdown }: AppOptions) {
     return c.json({ ok: true });
   });
 
-  app.get("/api/config", async (c) => c.json(toPublic(await loadConfig(configPath))));
+  app.get("/api/config", async (c) => c.json(toPublic(await loadConfig(configPath), configPath)));
 
   // 新增服務商；id 由名稱自動產生
   app.post("/api/providers", async (c) => {
@@ -58,7 +58,7 @@ export function createApp({ configPath, port, fetch, onShutdown }: AppOptions) {
       const provider = normalizeProvider({ ...body, id, helperModel: emptyToNull(body.helperModel) });
       config.providers.push(provider);
     });
-    return c.json(toPublic(config), 201);
+    return c.json(toPublic(config, configPath), 201);
   });
 
   // 編輯服務商；API key 留空代表不變更
@@ -71,7 +71,7 @@ export function createApp({ configPath, port, fetch, onShutdown }: AppOptions) {
       const apiKey = typeof body.apiKey === "string" && body.apiKey.trim() !== "" ? body.apiKey : current.type === "api" ? current.apiKey : undefined;
       config.providers[index] = normalizeProvider({ ...body, id, type: current.type, apiKey, helperModel: emptyToNull(body.helperModel) });
     });
-    return c.json(toPublic(config));
+    return c.json(toPublic(config, configPath));
   });
 
   app.delete("/api/providers/:id", async (c) => {
@@ -81,7 +81,7 @@ export function createApp({ configPath, port, fetch, onShutdown }: AppOptions) {
       delete config.lastSelection.byProvider[id];
       if (config.lastSelection.providerId === id) config.lastSelection.providerId = null;
     });
-    return c.json(toPublic(config));
+    return c.json(toPublic(config, configPath));
   });
 
   // 調整服務商在選單中的順序
@@ -95,7 +95,7 @@ export function createApp({ configPath, port, fetch, onShutdown }: AppOptions) {
       }
       config.providers = ids.map((id: string) => config.providers.find((p) => p.id === id)!);
     });
-    return c.json(toPublic(config));
+    return c.json(toPublic(config, configPath));
   });
 
   // 測試連線並取得模型清單。已存在的服務商可省略 apiKey，改用已儲存的 key
@@ -125,7 +125,7 @@ export function createApp({ configPath, port, fetch, onShutdown }: AppOptions) {
         limits: cleanLimits(body.limits),
       };
     });
-    return c.json(toPublic(config));
+    return c.json(toPublic(config, configPath));
   });
 
   return app;
@@ -133,8 +133,10 @@ export function createApp({ configPath, port, fetch, onShutdown }: AppOptions) {
 
 export type PublicConfig = ReturnType<typeof toPublic>;
 
-function toPublic(config: Config) {
+function toPublic(config: Config, path?: string) {
   return {
+    // 設定檔位置，顯示在網站的資料安全說明中
+    configPath: path,
     port: config.server.port,
     providers: config.providers.map(publicProvider),
     models: config.models,

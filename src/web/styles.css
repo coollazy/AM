@@ -43,7 +43,7 @@ nav button.active { color: var(--text); border-bottom-color: var(--accent); font
 .row:first-of-type { border-top: none; }
 .row .info { flex: 1; min-width: 200px; }
 .row .name { font-weight: 600; }
-.row .meta { color: var(--muted); font-size: 13px; margin-top: 2px; word-break: break-all; }
+.row .meta { color: var(--muted); font-size: 13px; margin-top: 2px; overflow-wrap: anywhere; }
 .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--border); color: var(--muted); margin-left: 8px; font-weight: normal; }
 .actions { display: flex; gap: 6px; flex-wrap: wrap; }
 button { font: inherit; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); color: var(--text); cursor: pointer; }
@@ -67,3 +67,12 @@ table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 6px 4px; }
 th { font-size: 13px; color: var(--muted); font-weight: normal; }
 .footer-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; flex-wrap: wrap; }
+
+.guide-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.guide-head h2 { margin: 0; }
+.guide-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px 28px; margin-top: 12px; line-height: 1.7; }
+.guide h3 { font-size: 15px; margin: 8px 0 4px; }
+.guide ol, .guide ul { margin: 0; padding-left: 20px; }
+.guide li { margin: 4px 0; }
+.guide li ul { margin-top: 2px; color: var(--muted); font-size: 14px; }
+code, kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 0 5px; overflow-wrap: anywhere; }
