@@ -70,7 +70,7 @@ tests/         單元測試，目錄結構對應 src/
 
 ## 4. 設定檔
 
-位置：`~/.am/config.json`（Windows：`%USERPROFILE%\.am\config.json`）。macOS 上檔案權限設為 `600`、目錄 `700`。
+位置：`~/.am/config.json`（Windows：`%USERPROFILE%\.am\config.json`）。可用環境變數 `AM_CONFIG_DIR` 指定其他目錄（例如測試時不動到正式設定）。macOS 上檔案權限設為 `600`、目錄 `700`。
 
 不匯入舊工具（`~/.local/bin/ai`、`~/.ai-profiles/`）的設定，也不修改它們。
 
@@ -121,7 +121,8 @@ am
          │          ・方向鍵選擇、打字即時篩選
          │          ・Tab 切換 1M（只對支援 1M 的模型有效，畫面顯示目前狀態）
          │          ・預設停在上次選的模型與 1M 狀態
-         │          ・Esc 返回第一層
+         │          ・Esc：有搜尋文字時先清除搜尋，否則返回第一層（第一層則離開）
+         │          ・Ctrl+C：離開
          │          └─ Enter → 記住選擇 → 啟動 Claude Code
          └─ 仍失敗 → 顯示失敗原因 → 返回第一層
 ```

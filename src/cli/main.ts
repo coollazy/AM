@@ -1,8 +1,12 @@
-import { ConfigError, loadConfig } from "../core/config";
+import { ConfigError, loadConfig, updateConfig } from "../core/config";
+import { ClaudeNotFoundError, launchClaude } from "../core/launch";
+import { fetchModels } from "../core/providers";
 import { configPath } from "../core/paths";
 import { PortInUseError, startServer } from "../server/serve";
 import { VERSION } from "../version";
 import { parseArgs } from "./args";
+import { runMenu } from "./menu";
+import { NotATerminalError, runPrompt } from "./terminal";
 import { isServerRunning, openBrowser, serverUrl, startServerInBackground, waitForServer } from "./web";
 
 const HELP = `AM（Agent Account Manager） ${VERSION}
@@ -58,6 +62,26 @@ async function main(): Promise<number> {
       console.log(`已開啟 ${serverUrl(port)}`);
       return 0;
     }
+    case "menu": {
+      const path = configPath();
+      return runMenu(
+        {
+          loadConfig: () => loadConfig(path),
+          saveSelection: async (providerId, selection) => {
+            await updateConfig(path, (config) => {
+              config.lastSelection.providerId = providerId;
+              if (selection) config.lastSelection.byProvider[providerId] = selection;
+            });
+          },
+          fetchModels: (provider) => fetchModels(provider),
+          prompt: runPrompt,
+          launch: launchClaude,
+          log: (message) => console.log(message),
+          env: process.env,
+        },
+        command.claudeArgs,
+      );
+    }
     default:
       console.error("尚未實作");
       return 1;
@@ -67,7 +91,7 @@ async function main(): Promise<number> {
 try {
   process.exit(await main());
 } catch (err) {
-  if (err instanceof ConfigError) {
+  if (err instanceof ConfigError || err instanceof ClaudeNotFoundError || err instanceof NotATerminalError) {
     console.error(err.message);
     process.exit(1);
   }

@@ -10,7 +10,7 @@ let path: string;
 
 beforeEach(async () => {
   home = await mkdtemp(join(tmpdir(), "am-test-"));
-  path = configPath(home);
+  path = configPath(home, {});
 });
 
 afterEach(async () => {
