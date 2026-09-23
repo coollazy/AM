@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, type PublicConfig } from "./api";
+import { Guide } from "./Guide";
 import { ModelSettings } from "./ModelSettings";
 import { Providers } from "./Providers";
 
@@ -20,6 +21,7 @@ export function App() {
         <h1>AM</h1>
         <span className="sub">Agent Account Manager · 管理 Claude Code 的服務商與模型</span>
       </header>
+      {config && <Guide configPath={config.configPath} />}
       <nav>
         <button className={tab === "providers" ? "active" : ""} onClick={() => setTab("providers")}>
           服務商
