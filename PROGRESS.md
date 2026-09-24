@@ -17,9 +17,9 @@
 ### 解除安裝、無 API 服務商引導、GitHub Actions 升級
 - 開始日期：2026-09-24
 - 目前狀態：三項都已完成並合併回 `develop`（未 push）。修正安裝腳本以壓縮檔安裝時誤回傳失敗的 bug（已包含在 v1.0.0 中）。
-- 下一步：使用者決定是否 push 並發 v1.1.0；push 後確認 Windows 自動測試（新增的解除安裝項目、升級後的 Actions）通過。
-- 尚未驗證：Windows 上的 `am uninstall`（只有單元測試，Windows 自動測試要 push 後才會跑）。
-- 待決問題：是否發 v1.1.0。
+- 下一步：使用者決定何時發 v1.1.0（合併到 `master` 並打 tag）。
+- 已驗證：`develop` 已 push，macOS＋Windows 自動測試全部通過（含 Windows `am uninstall` 7 項、Actions 升級後無 Node.js 20 警告）。
+- 待決問題：發版時機。
 
 ## 交接筆記（2026-09-24）
 
