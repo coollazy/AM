@@ -45,3 +45,4 @@
 - 2026-09-23：GitHub Actions 自動建立 v1.0.0 Release 成功，並以一行指令從 GitHub 實際安裝驗證
 - 2026-09-24：README 加入終端機選單與管理網站截圖，新增 `bun run screenshots` 產生截圖；選單提示補上空格（Tab 切換 1M 上下文）
 - 2026-09-24：GitHub Actions Windows 實機驗證（單元測試＋ 28 項 am.exe 與安裝腳本實測）全部通過
+- 2026-09-24：推送到 develop、master 時自動在 macOS 與 Windows 上測試
