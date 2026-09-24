@@ -112,6 +112,7 @@ bun run dev          # 開發模式執行管理網站（修改後自動重載）
 bun run build        # 打包本機平台執行檔到 dist/am
 bun run build:all    # 打包 macOS（arm64、x64）與 Windows x64 執行檔到 dist/
 bun run package      # 產出給使用者的安裝包（zip＋SHA256SUMS）到 dist/release/
+bun run screenshots  # 重新產生 README 截圖（docs/images/）；網站或選單畫面改動後要重跑
 ```
 
 每次完成功能前必須 `bun test` 與 `bun run typecheck` 都通過。
