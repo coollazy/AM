@@ -222,6 +222,14 @@ CLAUDE_CODE_MAX_CONTEXT_TOKENS
 
 macOS 執行檔：打包會改動執行檔內容，使原本的簽章失效，而 macOS 會拒絕執行簽章無效的下載檔案。因此打包後以 `codesign --force --sign -` 重新做臨時簽章，並以 `codesign --verify --strict` 檢查；這一步只能在 macOS 上執行。
 
+### 自動測試
+
+推送到 `develop`、`master` 時，`.github/workflows/test.yml` 會：
+- 在 macOS 與 Windows 上跑單元測試與型別檢查；
+- 在 macOS 上以正式發版方式打包，再到 Windows 上執行 `scripts/ci/windows-smoke.ps1`，實測 `am.exe`（網站、開機自動執行、Claude Code 檢查）與兩種安裝方式（PowerShell 5.1）。
+
+推送版本 tag 時只由 `release.yml` 打包發版，不另外等待測試。
+
 ### 安裝
 
 | 平台 | 一行指令 | 安裝位置 |

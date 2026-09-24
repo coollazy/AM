@@ -1,4 +1,4 @@
-# Windows 實機驗證：執行打包好的 am.exe 與安裝腳本（由 .github/workflows/windows-test.yml 呼叫）
+# Windows 實機驗證：執行打包好的 am.exe 與安裝腳本（由 .github/workflows/test.yml 呼叫）
 # 需要 dist/release/ 下有 am-windows-x64.zip 與 SHA256SUMS.txt
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
