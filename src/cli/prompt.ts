@@ -12,6 +12,8 @@ export type Toggle<T> = {
 export type PromptState<T> = {
   title: string;
   notice?: string;
+  // 一般提示（淡色），例如引導新使用者下一步
+  tip?: string;
   items: Item<T>[];
   query: string;
   cursor: number;
@@ -30,6 +32,7 @@ export function createPrompt<T>(options: {
   items: Item<T>[];
   initial?: T;
   notice?: string;
+  tip?: string;
   toggle?: Toggle<T>;
   escape: "back" | "cancel";
 }): PromptState<T> {
@@ -37,6 +40,7 @@ export function createPrompt<T>(options: {
   return {
     title: options.title,
     notice: options.notice,
+    tip: options.tip,
     items: options.items,
     query: "",
     cursor: Math.max(0, index),
@@ -106,6 +110,7 @@ export function render<T>(state: PromptState<T>, { width, height, color }: Rende
   const lines: string[] = [];
   lines.push(c.bold(state.title));
   if (state.notice) lines.push(c.red(state.notice));
+  if (state.tip) lines.push(c.dim(state.tip));
   lines.push(`${c.dim("搜尋：")}${state.query}${c.dim("▏")}`);
 
   const items = filteredItems(state);
