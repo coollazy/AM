@@ -117,7 +117,7 @@ export function render<T>(state: PromptState<T>, { width, height, color }: Rende
     footer.push(`${state.toggle.label}：${status}${usable || !state.toggle.on ? "" : c.dim("（此模型不支援，將以一般模式啟動）")}`);
   }
   const escHint = state.escape === "back" ? "Esc 返回" : "Esc 離開";
-  footer.push(c.dim(`↑↓ 選擇 · 輸入文字篩選 · Enter 確認${state.toggle ? ` · Tab 切換${state.toggle.label}` : ""} · ${escHint}`));
+  footer.push(c.dim(`↑↓ 選擇 · 輸入文字篩選 · Enter 確認${state.toggle ? ` · Tab 切換 ${state.toggle.label}` : ""} · ${escHint}`));
 
   const room = Math.max(3, height - lines.length - footer.length - 1);
   if (items.length === 0) {

@@ -43,3 +43,4 @@
 - 2026-09-23：從 git 歷史移除誤加入的 Bun 打包暫存檔（57 MB），加入 .gitignore，打包腳本自動清除
 - 2026-09-23：發布 v1.0.0
 - 2026-09-23：GitHub Actions 自動建立 v1.0.0 Release 成功，並以一行指令從 GitHub 實際安裝驗證
+- 2026-09-24：README 加入終端機選單與管理網站截圖，新增 `bun run screenshots` 產生截圖；選單提示補上空格（Tab 切換 1M 上下文）

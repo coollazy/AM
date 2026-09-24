@@ -9,6 +9,14 @@
 
 支援 macOS（Apple 晶片、Intel）與 Windows。使用前需先安裝 [Claude Code](https://claude.com/claude-code)。
 
+**終端機選單**：先選服務商，再選模型
+
+![終端機選單：第一層選服務商，第二層選模型並可按 Tab 切換 1M 上下文](docs/images/terminal.png)
+
+**管理網站**：在瀏覽器新增、編輯服務商
+
+![管理網站首頁：三步驟說明與服務商列表](docs/images/web.png)
+
 ## 安裝
 
 **macOS**：打開「終端機」，貼上這行後按 Enter：
@@ -103,6 +111,7 @@ bun test              # 單元測試
 bun run typecheck     # 型別檢查
 bun run dev           # 開發模式執行管理網站
 bun run package       # 產出所有平台的安裝包到 dist/release/
+bun run screenshots   # 重新產生 README 截圖（docs/images/，需要 Google Chrome）
 ```
 
 ### 發布新版本
