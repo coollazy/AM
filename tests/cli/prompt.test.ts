@@ -110,7 +110,7 @@ describe("畫面", () => {
     expect(lines).toContain("❯ claude-opus-5-5 · 可用 1M");
     expect(lines).toContain("  gpt-4o-mini");
     expect(lines).toContain("1M 上下文：開");
-    expect(lines.at(-1)).toContain("Tab 切換1M 上下文");
+    expect(lines.at(-1)).toContain("Tab 切換 1M 上下文");
     expect(lines.at(-1)).toContain("Esc 返回");
   });
 

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import {
   commandFromPlist,
   commandFromStartupScript,
@@ -32,7 +33,7 @@ describe("macOS LaunchAgent", () => {
   });
 
   test("設定檔位置", () => {
-    expect(launchAgentPath("/Users/a")).toBe("/Users/a/Library/LaunchAgents/local.am.server.plist");
+    expect(launchAgentPath("/Users/a")).toBe(join("/Users/a", "Library", "LaunchAgents", "local.am.server.plist"));
   });
 });
 

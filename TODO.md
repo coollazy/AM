@@ -11,9 +11,8 @@
 ## 待辦
 
 - [ ] 考慮把 AM 的 API key 改存系統鑰匙圈（macOS 鑰匙圈／Windows 認證管理員）（優先序：低）
-- [ ] 在 Windows 實機測試：安裝腳本、終端選單（方向鍵、中文輸入與顯示）、`am web`、開機自動執行（優先序：高）
 - [ ] 提供 Homebrew 安裝方式（需要另建 tap 儲存庫）（優先序：低）
 - [ ] 執行檔程式碼簽章（macOS 公證、Windows 簽章），避免系統跳出安全警告（優先序：低）
 - [ ] `am` 選單在沒有 API 服務商時的引導提示（優先序：低）
-- [ ] 第一次推送 tag 時確認 GitHub Actions 發版流程實際可用，並用一行指令從 GitHub 實際安裝一次（優先序：高）
 - [ ] 解除安裝方式（執行檔、開機自動執行、設定檔）（優先序：低）
+- [ ] GitHub Actions 的 `actions/checkout@v4`、`upload-artifact@v4`、`download-artifact@v4` 使用即將淘汰的 Node.js 20，升級到新版（優先序：低）

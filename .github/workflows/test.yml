@@ -1,0 +1,54 @@
+# 推送到 develop、master 時，在 macOS 與 Windows 上測試
+name: Test
+
+on:
+  push:
+    branches: [develop, master]
+  workflow_dispatch:
+
+jobs:
+  unit-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - run: bun install --frozen-lockfile
+      - name: 單元測試
+        run: bun test
+      - name: 型別檢查
+        run: bun run typecheck
+
+  # 以正式發版的方式打包（macOS 執行檔需要在 macOS 上重新簽章）
+  package:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - run: bun install --frozen-lockfile
+      - run: bun run package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: dist/release/
+
+  # 實際執行打包好的 am.exe 與安裝腳本
+  windows-smoke:
+    needs: package
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+          path: dist/release/
+      - name: 實測 am.exe 與安裝腳本
+        shell: pwsh
+        run: ./scripts/ci/windows-smoke.ps1
