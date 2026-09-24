@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { CLAUDE_NOT_INSTALLED, runMenu, type MenuDeps } from "../../src/cli/menu";
+import { CLAUDE_NOT_INSTALLED, NO_API_PROVIDER_TIP, runMenu, type MenuDeps } from "../../src/cli/menu";
 import { currentItem, type PromptResult, type PromptState } from "../../src/cli/prompt";
 import { defaultConfig, type ApiProvider, type Config } from "../../src/core/config";
 import type { ModelListResult } from "../../src/core/providers";
@@ -132,6 +132,15 @@ describe("runMenu", () => {
     const h = harness(config, []);
     expect(await runMenu(h.deps, [])).toBe(1);
     expect(h.logs).toEqual(["尚未設定任何服務商，請執行 am web 開啟管理網站新增。"]);
+  });
+
+  test("只有訂閱制時提示新增 API 服務商，有 API 服務商時不提示", async () => {
+    const only = harness(configWith(), [cancel]);
+    await runMenu(only.deps, []);
+    expect(only.prompts[0]!.tip).toBe(NO_API_PROVIDER_TIP);
+    const withApi = harness(configWith(mixroute), [cancel]);
+    await runMenu(withApi.deps, []);
+    expect(withApi.prompts[0]!.tip).toBeUndefined();
   });
 
   test("沒有安裝 Claude Code 時直接提示，不顯示選單", async () => {

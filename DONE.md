@@ -48,3 +48,4 @@
 - 2026-09-24：推送到 develop、master 時自動在 macOS 與 Windows 上測試
 - 2026-09-24：決定 API key 維持存在設定檔、不改用鑰匙圈；`am update` 不做；新版提醒記入 TODO
 - 2026-09-24：GitHub Actions 升級到支援 Node.js 24 的版本（checkout v7、upload-artifact v7、download-artifact v8）
+- 2026-09-24：`am` 選單在沒有 API 服務商時提示執行 `am web` 新增

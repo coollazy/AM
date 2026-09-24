@@ -126,6 +126,11 @@ describe("畫面", () => {
     expect(lines).toContain("  （共 50 項，第 41 項）");
   });
 
+  test("錯誤與一般提示依序顯示在標題下方", () => {
+    const state = createPrompt({ title: "t", items: [{ label: "a", value: "a" }], notice: "查詢失敗", tip: "提示", escape: "cancel" });
+    expect(render(state, opts).slice(0, 3)).toEqual(["t", "查詢失敗", "提示"]);
+  });
+
   test("顯示錯誤提示", () => {
     const state = createPrompt({ title: "t", items: [{ label: "a", value: "a" }], notice: "查詢失敗", escape: "cancel" });
     expect(render(state, opts)[1]).toBe("查詢失敗");
