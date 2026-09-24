@@ -6,7 +6,7 @@
 # 也可以在解壓縮後的安裝包資料夾中執行 ./install.sh，直接安裝旁邊的執行檔。
 #
 # 可用環境變數：
-#   AM_VERSION       指定版本，例如 v1.0.0（預設最新版）
+#   AM_VERSION       指定版本，例如 v1.1.0（預設最新版）
 #   AM_INSTALL_DIR   安裝目錄（預設 ~/.local/bin）
 #   AM_NO_PROMPT=1   不詢問，略過開機自動執行與開啟網站
 #   AM_NO_MODIFY_PATH=1  不修改 shell 設定檔
