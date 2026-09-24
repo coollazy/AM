@@ -128,8 +128,20 @@ Check "更新前網站執行中（舊版位置）" ((WaitHealth $true) -and ((Se
 Check "一行指令執行成功" ($LASTEXITCODE -eq 0)
 Check "安裝到指定目錄且版本正確" ((Test-Path "$bin2\am.exe") -and ((& "$bin2\am.exe" --version) -eq $version))
 Check "更新後網站以新位置重新啟動" ((WaitHealth $true) -and ((ServerExe) -eq "$bin2\am.exe"))
-StopServer
 Stop-Process -Id $http.Id -Force -ErrorAction SilentlyContinue
+
+Write-Host "== 解除安裝（--yes --purge）"
+& "$bin2\am.exe" autostart on | Out-Null
+Check "解除安裝前：開機自動執行已開啟、網站執行中" ((Test-Path $startupFile) -and (WaitHealth $true))
+$out = (& "$bin2\am.exe" uninstall --yes --purge) -join "`n"
+Check "am uninstall 執行成功" ($LASTEXITCODE -eq 0 -and $out.Contains("AM 已解除安裝"))
+Check "停止網站" (WaitHealth $false)
+Check "移除啟動資料夾腳本" (-not (Test-Path $startupFile))
+Check "從使用者 PATH 移除安裝目錄" (-not (([Environment]::GetEnvironmentVariable("Path", "User") -split ";") -contains $bin2))
+Check "刪除設定目錄" (-not (Test-Path $env:AM_CONFIG_DIR))
+$deadline = (Get-Date).AddSeconds(10)
+while ((Test-Path $bin2) -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 300 }
+Check "am 結束後刪除 am.exe 與安裝目錄" (-not (Test-Path $bin2))
 
 Write-Host ""
 if ($failures -gt 0) {

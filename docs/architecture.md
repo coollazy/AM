@@ -26,6 +26,7 @@ AM（Agent Account Manager）：本機網站管理 Claude Code 的連線設定�
 | `am autostart on` | 開啟開機自動執行 |
 | `am autostart off` | 關閉開機自動執行 |
 | `am autostart status` | 查看開機自動執行狀態 |
+| `am uninstall [--yes] [--purge \| --keep-config]` | 解除安裝 |
 
 若要把與子指令同名的參數轉給 `claude`，用 `am -- <參數>`。
 
@@ -253,6 +254,15 @@ macOS 執行檔：打包會改動執行檔內容，使原本的簽章失效，�
 Windows 編碼：`irm | iex` 下載的腳本以 UTF-8 解讀（GitHub raw 回應帶 `charset=utf-8`），儲存庫中的 `install.ps1` 不加 BOM；壓縮檔內的 `install.ps1` 以 `powershell -File` 執行，Windows PowerShell 5.1 需要 BOM 才會正確讀取中文，由 `scripts/package.ts` 打包時加上。一行指令執行時腳本跑在使用者目前的 PowerShell 中，出錯只能用 `throw`，不可用 `exit`（會關掉視窗）。
 
 Windows 上 `am` 啟動時會將終端機字碼頁切換為 UTF-8，以正確顯示中文。
+
+### 解除安裝
+
+`am uninstall`（`src/platform/uninstall.ts`）：
+1. 詢問是否確定（預設否）；非互動環境需加 `--yes`。只能從安裝好的執行檔執行。
+2. 停止管理網站、關閉開機自動執行。
+3. 安裝目錄除了 am 以外沒有其他檔案時，移除 PATH 設定：macOS 移除安裝腳本寫入 shell 設定檔的區塊（以 `# AM（Agent Account Manager）` 標記辨識，路徑以實際位置比對，處理捷徑）；Windows 從使用者 PATH 移除。安裝目錄還有其他工具時（例如 `~/.local/bin`）保留，避免影響其他工具。
+4. 詢問是否刪除設定目錄（預設否，`--purge`／`--keep-config` 可略過詢問）。
+5. 刪除執行檔：macOS 直接刪除；Windows 執行中的檔案無法刪除，由背景 `cmd.exe` 等 am 結束後刪除執行檔與空的安裝目錄。
 
 ### 啟動前檢查
 

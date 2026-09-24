@@ -91,8 +91,17 @@ irm https://raw.githubusercontent.com/coollazy/AM/master/scripts/install/install
 | `am web` | 用瀏覽器開啟管理網站（未執行時自動啟動） |
 | `am server` | 在前景執行管理網站 |
 | `am autostart on` / `off` / `status` | 開啟、關閉、查看開機自動執行 |
+| `am uninstall` | 解除安裝（詢問是否一併刪除設定與 API key；`--yes` 不詢問、`--purge` 刪除設定、`--keep-config` 保留設定） |
 | `am -- <參數...>` | 參數與上述子指令同名時，用這個方式交給 Claude Code |
 | `am --version` | 顯示版本 |
+
+## 解除安裝
+
+```sh
+am uninstall
+```
+
+會停止管理網站、關閉開機自動執行、移除安裝腳本加入的 PATH 設定並刪除執行檔。預設保留設定（`~/.am`），重新安裝後可以繼續使用；想一併刪除設定與 API key，回答「y」或加上 `--purge`。
 
 ## 設定與安全
 
