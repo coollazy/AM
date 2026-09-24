@@ -48,10 +48,21 @@ export function ModelSettings({ config, onChange }: { config: PublicConfig; onCh
     <form onSubmit={submit}>
       <section className="panel">
         <h2>模型清單過濾</h2>
+        <div className="section-intro">
+          <p>
+            <strong>
+              過濾的是：終端機輸入 <code>am</code>、選完服務商後，第二層列出的模型清單。
+            </strong>
+          </p>
+          <p>
+            <strong>為什麼要過濾：</strong>服務商提供的模型裡，有些是畫圖、語音、影片用的，不能拿來對話，在 Claude Code 裡選到會出錯；而且混在一起會讓清單變得很長、不好找（例如 MixRoute 的 112 個模型中有 23 個是這類模型）。
+          </p>
+          <p>模型名稱只要包含下面任一個關鍵字，就不會出現在清單中（不分大小寫）。</p>
+          <p>新增服務商時「測試連線」列出的模型，也會套用同樣的過濾。</p>
+        </div>
         <label>
           <span>排除關鍵字（一行一個）</span>
           <textarea value={excludeKeywords} onChange={(e) => setExcludeKeywords(e.target.value)} />
-          <div className="hint">模型名稱包含任一關鍵字就不列出，用來排除圖片、語音、影片等非文字對話模型。不分大小寫。</div>
         </label>
       </section>
 

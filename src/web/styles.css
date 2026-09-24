@@ -113,3 +113,6 @@ th { font-size: 13px; color: var(--muted); font-weight: 600; }
 .footer-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; flex-wrap: wrap; }
 .save-bar { align-items: center; gap: 14px; }
 .save-bar .success, .save-bar .error { margin: 0; }
+.section-intro { font-size: 14px; line-height: 1.7; color: var(--text-soft); margin: -6px 0 16px; }
+.section-intro p { margin: 0 0 6px; }
+.section-intro strong { color: var(--text); }
