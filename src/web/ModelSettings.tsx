@@ -68,10 +68,23 @@ export function ModelSettings({ config, onChange }: { config: PublicConfig; onCh
 
       <section className="panel">
         <h2>1M 上下文</h2>
+        <div className="section-intro">
+          <p>
+            <strong>1M 上下文是什麼：</strong>Claude Code 在一次對話中能記住的內容量。一般模式約 20 萬 token，1M 模式可以到 100 萬 token，適合讀大型專案或進行很長的對話。內容越多，每次的用量越大，費用也會跟著增加。
+          </p>
+          <p>
+            <strong>這裡設定的是：</strong>終端機輸入 <code>am</code> 後的第二層選單中，哪些模型可以按 <code>Tab</code> 切換成 1M 模式。
+          </p>
+          <p>
+            <strong>為什麼要有這份名單：</strong>服務商的模型清單不會標示哪些模型支援 1M，所以要在這裡列出。不在名單上的模型，即使開啟 1M 也會以一般模式啟動。
+          </p>
+          <p>
+            一行一個，<code>*</code> 代表任意文字，例如 <code>claude-opus-*</code> 代表所有 Opus 模型。
+          </p>
+        </div>
         <label>
-          <span>支援 1M 的模型（一行一個，可用 * 萬用字元）</span>
+          <span>支援 1M 的模型（一行一個）</span>
           <textarea value={oneMillionPatterns} onChange={(e) => setOneMillionPatterns(e.target.value)} />
-          <div className="hint">終端選單中只有這些模型可以按 Tab 切換 1M。</div>
         </label>
       </section>
 
