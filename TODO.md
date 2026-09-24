@@ -11,7 +11,6 @@
 ## 待辦
 
 - [ ] 考慮把 AM 的 API key 改存系統鑰匙圈（macOS 鑰匙圈／Windows 認證管理員）（優先序：低）
-- [ ] Windows 上互動式終端選單（方向鍵、Tab、中文顯示）與實際啟動 Claude Code 尚未驗證，需要 Windows 實機（優先序：中）
 - [ ] 發版流程是否先跑 Windows 測試再建立 Release（優先序：中）
 - [ ] 提供 Homebrew 安裝方式（需要另建 tap 儲存庫）（優先序：低）
 - [ ] 執行檔程式碼簽章（macOS 公證、Windows 簽章），避免系統跳出安全警告（優先序：低）
