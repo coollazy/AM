@@ -49,3 +49,5 @@
 - 2026-09-24：決定 API key 維持存在設定檔、不改用鑰匙圈；`am update` 不做；新版提醒記入 TODO
 - 2026-09-24：GitHub Actions 升級到支援 Node.js 24 的版本（checkout v7、upload-artifact v7、download-artifact v8）
 - 2026-09-24：`am` 選單在沒有 API 服務商時提示執行 `am web` 新增
+- 2026-09-24：新增 `am uninstall`（停止網站、關閉開機自動執行、移除 PATH 設定與執行檔，可選擇刪除設定），並在 macOS 實測
+- 2026-09-24：修正 macOS 安裝腳本以壓縮檔安裝時誤回傳失敗（錯誤代碼 1）

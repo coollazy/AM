@@ -117,7 +117,7 @@ bun run screenshots  # 重新產生 README 截圖（docs/images/）；網站或�
 
 每次完成功能前必須 `bun test` 與 `bun run typecheck` 都通過。
 
-實際執行測試時，用 `AM_CONFIG_DIR=/tmp/...` 指定暫存設定目錄、`AM_INSTALL_DIR` 指定暫存安裝目錄、`HOME` 指定暫存家目錄（安裝腳本會修改 `~/.zshrc`），不可動到使用者的 `~/.am`、`~/.local/bin`、`~/.zshrc`。暫存設定要另外指定埠號（例如 4999），否則安裝腳本會把使用者正在執行的管理網站當成要更新的對象停掉。
+實際執行測試時，用 `AM_CONFIG_DIR=/tmp/...` 指定暫存設定目錄、`AM_INSTALL_DIR` 指定暫存安裝目錄、`HOME` 指定暫存家目錄（安裝腳本會修改 `~/.zshrc`），不可動到使用者的 `~/.am`、`~/.local/bin`、`~/.zshrc`。暫存設定要另外指定埠號（例如 4999），否則安裝腳本會把使用者正在執行的管理網站當成要更新的對象停掉。**每個測試情境開始前都要重新寫入含測試埠號的設定檔**：`am uninstall --purge` 會刪掉設定目錄，之後再安裝就會回到預設的 4141，安裝腳本與 `am uninstall` 會停掉使用者的網站（2026-09-24 曾發生）。
 
 ### 撰寫注意事項
 
@@ -126,3 +126,4 @@ bun run screenshots  # 重新產生 README 截圖（docs/images/）；網站或�
 - `install.ps1` 可能以 `irm | iex` 在使用者目前的 PowerShell 中執行，出錯一律用 `throw`，不可用 `exit`。
 - macOS 執行檔打包後必須重新臨時簽章（`scripts/build.ts` 已處理），所以 macOS 版只能在 macOS 上打包。
 - 在 zsh 中不可用 `path` 當變數名稱（它與 `PATH` 連動）。
+- Shell 腳本的 `trap … EXIT` 清理函式不可用 `[ … ] && …` 當最後一行：條件不成立時會讓整個腳本回傳失敗，改用 `if … then … fi`。

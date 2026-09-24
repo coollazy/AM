@@ -27,4 +27,12 @@ describe("parseArgs", () => {
     expect(parseArgs(["autostart"]).kind).toBe("error");
     expect(parseArgs(["autostart", "maybe"]).kind).toBe("error");
   });
+
+  test("uninstall 的選項", () => {
+    expect(parseArgs(["uninstall"])).toEqual({ kind: "uninstall", yes: false, purge: null });
+    expect(parseArgs(["uninstall", "--yes", "--purge"])).toEqual({ kind: "uninstall", yes: true, purge: true });
+    expect(parseArgs(["uninstall", "-y", "--keep-config"])).toEqual({ kind: "uninstall", yes: true, purge: false });
+    expect(parseArgs(["uninstall", "--purge", "--keep-config"]).kind).toBe("error");
+    expect(parseArgs(["uninstall", "--force"]).kind).toBe("error");
+  });
 });

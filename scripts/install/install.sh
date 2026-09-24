@@ -34,7 +34,7 @@ ask() {
 }
 
 WORK=""
-cleanup() { [ -n "$WORK" ] && rm -rf "$WORK"; }
+cleanup() { if [ -n "$WORK" ]; then rm -rf "$WORK"; fi; }
 trap cleanup EXIT
 
 # 取得要安裝的執行檔：以檔案執行且旁邊有 am 時用旁邊的，否則從 GitHub Releases 下載

@@ -5,12 +5,15 @@ import { configPath } from "../core/paths";
 import { PortInUseError, startServer } from "../server/serve";
 import { VERSION } from "../version";
 import { parseArgs } from "./args";
+import { askYesNo } from "./confirm";
 import { useUtf8Console } from "./console";
 import { runMenu } from "./menu";
 import { NotATerminalError, runPrompt } from "./terminal";
 import { homedir } from "node:os";
 import { amDir } from "../core/paths";
 import { autostartStatus, disableAutostart, enableAutostart, UnsupportedPlatformError, type AutostartContext } from "../platform/manager";
+import { uninstall } from "../platform/uninstall";
+import { spawn } from "node:child_process";
 import { isServerRunning, openBrowser, selfCommand, serverUrl, startServerInBackground, stopServer, waitForServer } from "./web";
 
 const HELP = `AM（Agent Account Manager） ${VERSION}
@@ -20,6 +23,8 @@ const HELP = `AM（Agent Account Manager） ${VERSION}
   am web                        用瀏覽器開啟管理網站
   am server                     在前景執行管理網站
   am autostart on|off|status    開機自動執行管理網站
+  am uninstall [--yes] [--purge | --keep-config]
+                                解除安裝（--purge 一併刪除設定與 API key）
   am -- <參數...>               把與子指令同名的參數轉給 claude
   am --version                  顯示版本`;
 
@@ -91,6 +96,42 @@ async function main(): Promise<number> {
       console.log(`管理網站：${(await isServerRunning(port)) ? `執行中（${serverUrl(port)}）` : "未執行"}`);
       return 0;
     }
+    case "uninstall": {
+      const self = selfCommand();
+      if (self.length > 1) {
+        console.error("am uninstall 只能從安裝好的 am 執行");
+        return 1;
+      }
+      const interactive = process.stdin.isTTY && process.stdout.isTTY;
+      if (!command.yes) {
+        if (!interactive) {
+          console.error("非互動環境請加上 --yes：am uninstall --yes [--purge]");
+          return 1;
+        }
+        if (!(await askYesNo(`確定要解除安裝 AM（${self[0]}）嗎？`, false))) return 0;
+      }
+      const purge = command.purge ?? (interactive ? await askYesNo(`要一併刪除設定目錄 ${amDir()}（包含 API key）嗎？`, false) : false);
+      const { port } = (await loadConfig(configPath())).server;
+      await uninstall(
+        {
+          platform: process.platform,
+          home: homedir(),
+          exePath: self[0]!,
+          configDir: amDir(),
+          stopServer: () => stopServer(port),
+          disableAutostart: () => disableAutostart(autostartContext()),
+          getUserPath: () => powershell("[Environment]::GetEnvironmentVariable('Path','User')"),
+          setUserPath: async (value) => {
+            await powershell("[Environment]::SetEnvironmentVariable('Path', $env:AM_NEW_PATH, 'User')", { AM_NEW_PATH: value });
+          },
+          spawnDetached: ([cmd, ...args]) => spawn(cmd!, args, { detached: true, stdio: "ignore", windowsHide: true, windowsVerbatimArguments: true }).unref(),
+          log: (message) => console.log(message),
+        },
+        { purge },
+      );
+      console.log("AM 已解除安裝");
+      return 0;
+    }
     case "menu": {
       const path = configPath();
       return runMenu(
@@ -123,6 +164,17 @@ async function main(): Promise<number> {
       console.error("尚未實作");
       return 1;
   }
+}
+
+async function powershell(script: string, extraEnv: Record<string, string> = {}): Promise<string> {
+  const child = Bun.spawn(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script], {
+    env: { ...process.env, ...extraEnv },
+    stdout: "pipe",
+    stderr: "ignore",
+  });
+  const out = await new Response(child.stdout).text();
+  if ((await child.exited) !== 0) throw new Error("PowerShell 執行失敗");
+  return out.trim();
 }
 
 function autostartContext(): AutostartContext {
