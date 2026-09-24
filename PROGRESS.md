@@ -14,19 +14,14 @@
 
 ## 進行中
 
-### AM v1.1.0 發布
-- 開始日期：2026-09-24
-- 目前狀態：版本號改為 1.1.0，`develop` 合併到 `master` 並打上 tag `v1.1.0`（本機，尚未 push）。
-- 內容：`am uninstall`、無 API 服務商時的選單提示、修正以壓縮檔安裝時安裝腳本誤回傳失敗（v1.0.0 的安裝腳本仍有此問題，先前記錄為「已包含在 v1.0.0」有誤）、模型設定頁說明、GitHub Actions 升級。
-- 下一步：使用者同意後 push `develop`、`master` 與 tag，確認 GitHub Actions 建立 Release，並以一行指令從 GitHub 實際安裝驗證。
-- 待決問題：無。
+（無）
 
 ## 交接筆記（2026-09-24）
 
-- **目標**：AM（Agent Account Manager）＝本機管理網站＋終端 `am` 指令，選服務商／模型後啟動 Claude Code，每個終端視窗獨立。v1.0.0 已發布，v1.1.0 發布中。
+- **目標**：AM（Agent Account Manager）＝本機管理網站＋終端 `am` 指令，選服務商／模型後啟動 Claude Code，每個終端視窗獨立。v1.1.0 已發布。
 - **已確認的事**
-  - 現況：GitHub Release `v1.0.0`（GitHub Actions 自動打包）；v1.1.0 見上方進行中。
-  - 使用者的 `am` 安裝在 `~/.local/bin/am`（1.0.0），管理網站跑在 `127.0.0.1:4141`（非開機自動執行，手動背景啟動）；設定 `~/.am/config.json` 有 4 個服務商（含真實 key）。
+  - 現況：`master`＝tag `v1.1.0`，已 push；GitHub Release `v1.1.0`（GitHub Actions 自動打包）。
+  - 使用者的 `am` 安裝在 `~/.local/bin/am`（1.1.0），管理網站跑在 `127.0.0.1:4141`（非開機自動執行，手動背景啟動）；設定 `~/.am/config.json` 有 4 個服務商（含真實 key）。
   - CI：push `develop`／`master` → `test.yml`（macOS＋Windows 單元測試、打包、Windows 28 項實測）；打 tag → `release.yml` 直接打包發版，不等測試。
   - `am` 參數原樣轉給 claude（`-n`、`-c`、`--resume`、`-p` 皆可）；第一個參數為 `--version`/`-v`/`--help`/`-h`/`web`/`server`/`autostart` 時由 am 處理，`am -- <參數>` 可強制轉交。
   - 網站配色 P03「晨霧藍＋海港藍」，固定淺色；訂閱制最多一個；主按鈕用主色。
