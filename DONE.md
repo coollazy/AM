@@ -46,3 +46,14 @@
 - 2026-09-24：README 加入終端機選單與管理網站截圖，新增 `bun run screenshots` 產生截圖；選單提示補上空格（Tab 切換 1M 上下文）
 - 2026-09-24：GitHub Actions Windows 實機驗證（單元測試＋ 28 項 am.exe 與安裝腳本實測）全部通過
 - 2026-09-24：推送到 develop、master 時自動在 macOS 與 Windows 上測試
+- 2026-09-24：決定 API key 維持存在設定檔、不改用鑰匙圈；`am update` 不做；新版提醒記入 TODO
+- 2026-09-24：GitHub Actions 升級到支援 Node.js 24 的版本（checkout v7、upload-artifact v7、download-artifact v8）
+- 2026-09-24：`am` 選單在沒有 API 服務商時提示執行 `am web` 新增
+- 2026-09-24：新增 `am uninstall`（停止網站、關閉開機自動執行、移除 PATH 設定與執行檔，可選擇刪除設定），並在 macOS 實測
+- 2026-09-24：修正 macOS 安裝腳本以壓縮檔安裝時誤回傳失敗（錯誤代碼 1）
+- 2026-09-24：push develop，macOS＋Windows 自動測試通過（含 Windows 解除安裝驗證）
+- 2026-09-24：模型設定頁「模型清單過濾」加上說明：過濾的是哪個清單、為什麼要過濾
+- 2026-09-24：模型設定頁「1M 上下文」加上說明：是什麼、設定的是什麼、為什麼要有名單、寫法
+- 2026-09-24：模型設定頁「模型上限」加上說明，沒有個別設定時顯示提示文字
+- 2026-09-24：決定放棄支援 Antigravity CLI（`agy`），原因記在 `TODO.md`「已放棄」
+- 2026-09-24：發布 v1.1.0

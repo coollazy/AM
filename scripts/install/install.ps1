@@ -5,7 +5,7 @@
 # 也可以在解壓縮後的安裝包資料夾中執行：
 #   powershell -ExecutionPolicy Bypass -File .\install.ps1
 #
-# 可用環境變數：AM_VERSION（例如 v1.0.0）、AM_INSTALL_DIR、AM_NO_PROMPT=1、AM_DOWNLOAD_URL（下載位置，預設 GitHub Releases）
+# 可用環境變數：AM_VERSION（例如 v1.1.0）、AM_INSTALL_DIR、AM_NO_PROMPT=1、AM_DOWNLOAD_URL（下載位置，預設 GitHub Releases）
 #
 # 以一行指令執行時，腳本在使用者目前的 PowerShell 中執行，出錯時用 throw，不可用 exit（會關掉視窗）
 & {

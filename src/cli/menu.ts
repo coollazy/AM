@@ -22,6 +22,8 @@ export const CLAUDE_NOT_INSTALLED = `找不到 Claude Code（claude 指令）。
 請先安裝 Claude Code：https://claude.com/claude-code
 安裝完成後重新開啟終端機，再執行 am。`;
 
+export const NO_API_PROVIDER_TIP = "提示：還沒有 API 服務商。執行 am web 開啟管理網站即可新增。";
+
 export async function runMenu(deps: MenuDeps, claudeArgs: string[]): Promise<number> {
   if (!deps.claudeInstalled()) {
     deps.log(CLAUDE_NOT_INSTALLED);
@@ -39,6 +41,7 @@ export async function runMenu(deps: MenuDeps, claudeArgs: string[]): Promise<num
       createPrompt<Provider>({
         title: "選擇服務商",
         notice,
+        tip: config.providers.some((p) => p.type === "api") ? undefined : NO_API_PROVIDER_TIP,
         items: config.providers.map((p) => ({ label: p.name, value: p, hint: p.type === "subscription" ? "訂閱制" : undefined })),
         initial: config.providers.find((p) => p.id === config.lastSelection.providerId),
         escape: "cancel",

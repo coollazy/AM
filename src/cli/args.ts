@@ -3,6 +3,7 @@ export type Command =
   | { kind: "web" }
   | { kind: "server" }
   | { kind: "autostart"; action: "on" | "off" | "status" }
+  | { kind: "uninstall"; yes: boolean; purge: boolean | null }
   | { kind: "version" }
   | { kind: "help" }
   | { kind: "error"; message: string };
@@ -27,6 +28,15 @@ export function parseArgs(argv: string[]): Command {
         return { kind: "autostart", action: action as (typeof AUTOSTART_ACTIONS)[number] };
       }
       return { kind: "error", message: "用法：am autostart on | off | status" };
+    }
+    case "uninstall": {
+      const unknown = rest.filter((a) => !["--yes", "-y", "--purge", "--keep-config"].includes(a));
+      if (unknown.length > 0 || (rest.includes("--purge") && rest.includes("--keep-config"))) {
+        return { kind: "error", message: "用法：am uninstall [--yes] [--purge | --keep-config]" };
+      }
+      // purge 為 null 時詢問使用者
+      const purge = rest.includes("--purge") ? true : rest.includes("--keep-config") ? false : null;
+      return { kind: "uninstall", yes: rest.includes("--yes") || rest.includes("-y"), purge };
     }
     case "version":
     case "--version":

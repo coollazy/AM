@@ -1,6 +1,6 @@
 {
   "name": "am",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Agent Account Manager：管理 Claude Code 的服務商與模型設定",
   "type": "module",
   "private": true,

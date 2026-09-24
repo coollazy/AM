@@ -36,7 +36,7 @@ irm https://raw.githubusercontent.com/coollazy/AM/master/scripts/install/install
 - macOS 安裝到 `~/.local/bin/am`，Windows 安裝到 `%LOCALAPPDATA%\Programs\am\am.exe`。
 - macOS 安裝後請**新開一個終端機視窗**再使用 `am`；Windows 在同一個視窗就能直接使用。
 - **更新**：重新執行同一行指令即可。會先停止執行中的管理網站再替換，並保留開機自動執行的設定。
-- **安裝指定版本**：macOS 在 `sh` 前加上 `AM_VERSION=v1.0.0`，例如 `curl -fsSL … | AM_VERSION=v1.0.0 sh`；Windows 先執行 `$env:AM_VERSION="v1.0.0"`。
+- **安裝指定版本**：macOS 在 `sh` 前加上 `AM_VERSION=v1.1.0`，例如 `curl -fsSL … | AM_VERSION=v1.1.0 sh`；Windows 先執行 `$env:AM_VERSION="v1.1.0"`。
 
 <details>
 <summary>不想用一行指令？手動下載安裝</summary>
@@ -91,8 +91,17 @@ irm https://raw.githubusercontent.com/coollazy/AM/master/scripts/install/install
 | `am web` | 用瀏覽器開啟管理網站（未執行時自動啟動） |
 | `am server` | 在前景執行管理網站 |
 | `am autostart on` / `off` / `status` | 開啟、關閉、查看開機自動執行 |
+| `am uninstall` | 解除安裝（詢問是否一併刪除設定與 API key；`--yes` 不詢問、`--purge` 刪除設定、`--keep-config` 保留設定） |
 | `am -- <參數...>` | 參數與上述子指令同名時，用這個方式交給 Claude Code |
 | `am --version` | 顯示版本 |
+
+## 解除安裝
+
+```sh
+am uninstall
+```
+
+會停止管理網站、關閉開機自動執行、移除安裝腳本加入的 PATH 設定並刪除執行檔。預設保留設定（`~/.am`），重新安裝後可以繼續使用；想一併刪除設定與 API key，回答「y」或加上 `--purge`。
 
 ## 設定與安全
 
@@ -117,7 +126,7 @@ bun run screenshots   # 重新產生 README 截圖（docs/images/，需要 Googl
 ### 發布新版本
 
 1. 更新 `package.json` 的 `version`，合併到 `master`。
-2. 打上相同版本的 tag 並推送，例如 `git tag v1.0.0 && git push origin master v1.0.0`。
+2. 打上相同版本的 tag 並推送，例如 `git tag v1.1.0 && git push origin master v1.1.0`。
 3. GitHub Actions（`.github/workflows/release.yml`）會自動測試、打包並建立 Release。
 
 架構說明見 [`docs/architecture.md`](docs/architecture.md)。
