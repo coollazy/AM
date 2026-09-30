@@ -39,3 +39,21 @@ export async function launchClaude(env: Record<string, string>, args: string[]):
     process.off("SIGINT", ignore);
   }
 }
+
+// 開機自動執行的網站由系統啟動，PATH 不含使用者自己加的目錄；補上 Claude Code 常見的安裝位置（接在原本的 PATH 後面）
+export function withClaudeInstallPaths(env: Record<string, string>, home: string): Record<string, string> {
+  const extra = [`${home}/.local/bin`, `${home}/.claude/local`, "/opt/homebrew/bin", "/usr/local/bin"];
+  const current = (env.PATH ?? "").split(":").filter((p) => p !== "");
+  return { ...env, PATH: [...current, ...extra.filter((p) => !current.includes(p))].join(":") };
+}
+
+// 在背景執行 claude 子指令（例如 auth logout），不顯示輸出；找不到 claude 或失敗時回傳 false
+export async function runClaudeQuietly(env: Record<string, string>, args: string[]): Promise<boolean> {
+  try {
+    const command = resolveClaudeCommand(Bun.which, process.platform, env);
+    const child = Bun.spawn([...command, ...args], { env, stdin: "ignore", stdout: "ignore", stderr: "ignore" });
+    return (await child.exited) === 0;
+  } catch {
+    return false;
+  }
+}

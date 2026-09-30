@@ -14,7 +14,30 @@
 
 ## 進行中
 
-（無）
+### 多個 Claude 訂閱帳號（macOS）
+- 開始日期：2026-09-30
+- 分支：`feature/multi-subscription`
+- 決定（2026-09-30 與使用者逐題確認）：
+  - 範圍：只做 macOS；Windows 維持最多一個訂閱制。不做網站管理 MCP、指定主帳號、各帳號選不同 MCP、額度用完自動換帳號。
+  - 主帳號＝首次安裝內建的訂閱制，對應 `~/.claude`（直接打 `claude` 就是它）。可刪除（只從選單移除，不登出、不動資料）、可加回（沒有主帳號時新增的訂閱制自動成為主帳號）。換主帳號＝在 `claude` 裡手動重新登入，網站寫說明。
+  - 附加帳號：資料夾 `~/.am/accounts/<id>/`，啟動時設 `CLAUDE_CONFIG_DIR`，只能透過 `am` 進入。
+  - 刪除附加帳號：`claude auth logout`（帶該帳號的 `CLAUDE_CONFIG_DIR`）後刪資料夾；登出失敗仍刪並提示。`am uninstall --purge` 同樣逐一登出附加帳號，絕不登出主帳號。
+  - 捷徑共用（指向 `~/.claude`）：CLAUDE.md、settings.json、keybindings.json、history.jsonl、agents、commands、skills、plugins、rules、output-styles、workflows、agent-memory、themes、projects、file-history、plans、tasks、paste-cache、uploads。其餘（帳號／執行狀態／暫存、非標準項目）不共用。
+  - 每次啟動附加帳號前，從 `~/.claude.json` 複製：全域 `mcpServers`、各專案的 MCP 與信任設定、已完成首次使用與介面偏好。附加帳號改的會被還原；網站附加帳號加說明。
+  - 捷徑被換成真檔案：改名備份、重建捷徑、提示後照常啟動。
+  - 登入：終端機自己登入，或網站「登入」按鈕開 macOS 內建「終端機」執行 `claude auth login`（有 email 就 `--email` 預填）；提醒用無痕視窗授權。
+  - 訂閱制有 email 選填欄位（主帳號也可填）；登入後 email 不一致、兩帳號 email 相同都警告。
+  - 網站與 `am` 選單都顯示登入 email（網站另顯示組織名稱）；未登入顯示「尚未登入」。email 讀各帳號 `.claude.json` 的 `oauthAccount`。
+  - 選訂閱帳號時若有 `CLAUDE_CONFIG_DIR` 或 `CLAUDE_CODE_OAUTH_TOKEN`，`am` 報錯停止並說明修復方式；API 服務商不檢查；網站不處理。
+- 已查證：`CLAUDE_CONFIG_DIR` 各自獨立登入（鑰匙圈項目依路徑區分）；Claude Code 寫 settings.json 會保留捷徑（`claude plugin disable` 實測）；`claude auth login/logout/status` 存在。
+- 開發時要實測：對話中編輯全域 CLAUDE.md 是否保留捷徑；`--email` 預填在瀏覽器已登入其他帳號時的效果。
+- 目前狀態：開發完成，等使用者驗收（尚未合併 develop）。`bun test`（182 項）、typecheck、打包皆通過；README／architecture／截圖已更新。
+- 已實測（暫存 HOME／AM_CONFIG_DIR／埠號 4999，真的 claude 2.1.280）：新增附加帳號會建立 19 個捷徑並同步 MCP；附加帳號裡 `claude mcp get` 讀得到主帳號的 MCP；主帳號缺 settings.json 時，Claude Code 透過捷徑寫入會建在主帳號且捷徑保留；刪除附加帳號真的執行 `claude auth logout` 成功、主帳號鑰匙圈項目仍在；打包後的執行檔網站正常。
+- 實作補充：背景網站 PATH 不含 ~/.local/bin，登出時補上 Claude Code 常見安裝位置。
+- 尚未實測（需要使用者的第二個真實帳號）：網站「登入」按鈕實際開終端機與授權流程；`--email` 預填在瀏覽器已登入其他帳號時的效果；對話中編輯全域 CLAUDE.md 是否保留捷徑；兩個帳號同時使用。
+- 下一步：使用者驗收 → 合併 develop →（要發版時）改版號、合併 master、打 tag。
+- 待決問題：無。
+
 
 ## 交接筆記（2026-09-24）
 

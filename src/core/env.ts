@@ -13,7 +13,11 @@ export const MANAGED_ENV_VARS = [
 ] as const;
 
 export type LaunchSelection =
-  | { provider: Provider & { type: "subscription" } }
+  | {
+      provider: Provider & { type: "subscription" };
+      // 附加帳號的資料夾；主帳號為 null（使用 Claude Code 預設的 ~/.claude）
+      accountDir: string | null;
+    }
   | {
       provider: Provider & { type: "api" };
       model: string;
@@ -32,7 +36,11 @@ export function buildLaunchEnv(
   for (const [key, value] of Object.entries(baseEnv)) {
     if (value !== undefined && !isManaged(key, platform)) env[key] = value;
   }
-  if (selection.provider.type === "subscription") return env;
+  if (selection.provider.type === "subscription") {
+    const { accountDir } = selection as Extract<LaunchSelection, { accountDir: string | null }>;
+    if (accountDir !== null) env.CLAUDE_CONFIG_DIR = accountDir;
+    return env;
+  }
 
   const { provider, model, oneMillion, availableModels } = selection as Extract<LaunchSelection, { model: string }>;
   env.ANTHROPIC_BASE_URL = provider.baseUrl;

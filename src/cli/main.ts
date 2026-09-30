@@ -1,5 +1,8 @@
 import { ConfigError, loadConfig, updateConfig } from "../core/config";
-import { ClaudeNotFoundError, launchClaude, resolveClaudeCommand } from "../core/launch";
+import { ClaudeNotFoundError, launchClaude, resolveClaudeCommand, runClaudeQuietly, withClaudeInstallPaths } from "../core/launch";
+import { accountEnv, accountStatePath, prepareAccount, readLogin } from "../core/accounts";
+import { terminalCommand } from "../platform/login";
+import type { AppOptions } from "../server/app";
 import { fetchModels } from "../core/providers";
 import { configPath } from "../core/paths";
 import { PortInUseError, startServer } from "../server/serve";
@@ -10,7 +13,7 @@ import { useUtf8Console } from "./console";
 import { runMenu } from "./menu";
 import { NotATerminalError, runPrompt } from "./terminal";
 import { homedir } from "node:os";
-import { amDir } from "../core/paths";
+import { accountDir, amDir, claudeDir, claudeStatePath } from "../core/paths";
 import { autostartStatus, disableAutostart, enableAutostart, UnsupportedPlatformError, type AutostartContext } from "../platform/manager";
 import { uninstall } from "../platform/uninstall";
 import { spawn } from "node:child_process";
@@ -47,7 +50,7 @@ async function main(): Promise<number> {
         return 0;
       }
       try {
-        const server = startServer({ configPath: configPath(), port: config.server.port, onShutdown: () => process.exit(0) });
+        const server = startServer({ ...accountServices(), configPath: configPath(), port: config.server.port, onShutdown: () => process.exit(0) });
         console.log(`AM 管理網站：${server.url}`);
       } catch (err) {
         if (err instanceof PortInUseError) {
@@ -124,6 +127,7 @@ async function main(): Promise<number> {
           setUserPath: async (value) => {
             await powershell("[Environment]::SetEnvironmentVariable('Path', $env:AM_NEW_PATH, 'User')", { AM_NEW_PATH: value });
           },
+          logoutAccount: accountServices().logoutAccount,
           spawnDetached: ([cmd, ...args]) => spawn(cmd!, args, { detached: true, stdio: "ignore", windowsHide: true, windowsVerbatimArguments: true }).unref(),
           log: (message) => console.log(message),
         },
@@ -154,6 +158,9 @@ async function main(): Promise<number> {
           fetchModels: (provider) => fetchModels(provider),
           prompt: runPrompt,
           launch: launchClaude,
+          loginInfo: (p) => readLogin(p.primary ? claudeStatePath() : accountStatePath(accountDir(p.id))),
+          accountDir: (id) => accountDir(id),
+          prepareAccount: (dir) => prepareAccount({ primaryDir: claudeDir(), primaryStatePath: claudeStatePath(), accountDir: dir }),
           log: (message) => console.log(message),
           env: process.env,
         },
@@ -164,6 +171,20 @@ async function main(): Promise<number> {
       console.error("尚未實作");
       return 1;
   }
+}
+
+// 網站處理訂閱帳號登入、登出時用到的系統功能
+function accountServices(): Pick<AppOptions, "home" | "platform" | "logoutAccount" | "openTerminal"> {
+  const home = homedir();
+  return {
+    home,
+    platform: process.platform,
+    logoutAccount: (dir) => runClaudeQuietly(withClaudeInstallPaths(accountEnv(process.env, dir), home), ["auth", "logout"]),
+    openTerminal: async (command) => {
+      const child = Bun.spawn(terminalCommand(command), { stdout: "ignore", stderr: "ignore" });
+      if ((await child.exited) !== 0) throw new Error("無法開啟終端機");
+    },
+  };
 }
 
 async function powershell(script: string, extraEnv: Record<string, string> = {}): Promise<string> {

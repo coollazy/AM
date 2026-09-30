@@ -48,6 +48,8 @@ export type UninstallContext = {
   getUserPath: () => Promise<string>;
   setUserPath: (value: string) => Promise<void>;
   spawnDetached: (cmd: string[]) => void;
+  // 以附加訂閱帳號的資料夾執行 claude auth logout，成功回傳 true
+  logoutAccount: (accountDir: string) => Promise<boolean>;
   log: (message: string) => void;
 };
 
@@ -94,6 +96,13 @@ export async function uninstall(ctx: UninstallContext, { purge }: UninstallOptio
   }
 
   if (purge) {
+    // 附加訂閱帳號的資料夾在設定目錄裡，刪除前先登出，清掉鑰匙圈裡的登入；主帳號（~/.claude）不動
+    const accountsDir = join(ctx.configDir, "accounts");
+    const accounts = await readdir(accountsDir, { withFileTypes: true }).catch(() => []);
+    for (const entry of accounts.filter((e) => e.isDirectory())) {
+      const ok = await ctx.logoutAccount(join(accountsDir, entry.name)).catch(() => false);
+      ctx.log(ok ? `已登出附加帳號 ${entry.name}` : `附加帳號 ${entry.name} 登出失敗，macOS 鑰匙圈可能殘留它的登入資料`);
+    }
     await rm(ctx.configDir, { recursive: true, force: true });
     ctx.log(`已刪除設定目錄 ${ctx.configDir}`);
   } else {

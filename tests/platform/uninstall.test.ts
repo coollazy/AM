@@ -79,6 +79,7 @@ describe("uninstall", () => {
         userPath = v;
       },
       spawnDetached: (cmd) => calls.push(`spawn ${cmd.at(-1)}`),
+      logoutAccount: async (dir) => (calls.push(`logout ${dir}`), true),
       log: () => {},
     };
     return { bin, exe, configDir, ctx };
@@ -107,6 +108,24 @@ describe("uninstall", () => {
     const { configDir, ctx } = await setup("darwin");
     await uninstall(ctx, { purge: true });
     expect(await Bun.file(join(configDir, "config.json")).exists()).toBe(false);
+  });
+
+  test("purge 時先登出附加訂閱帳號再刪除；不登出主帳號、不動 ~/.claude", async () => {
+    const { configDir, ctx } = await setup("darwin");
+    await mkdir(join(configDir, "accounts", "work"), { recursive: true });
+    await mkdir(join(home, ".claude"));
+    await writeFile(join(home, ".claude", "CLAUDE.md"), "keep");
+    await uninstall(ctx, { purge: true });
+    expect(calls.filter((c) => c.startsWith("logout"))).toEqual([`logout ${join(configDir, "accounts", "work")}`]);
+    expect(await Bun.file(join(configDir, "accounts", "work")).exists()).toBe(false);
+    expect(await readFile(join(home, ".claude", "CLAUDE.md"), "utf8")).toBe("keep");
+  });
+
+  test("不 purge 時不登出附加帳號", async () => {
+    const { configDir, ctx } = await setup("darwin");
+    await mkdir(join(configDir, "accounts", "work"), { recursive: true });
+    await uninstall(ctx, { purge: false });
+    expect(calls.some((c) => c.startsWith("logout"))).toBe(false);
   });
 
   test("安裝目錄還有其他工具時保留 PATH 設定", async () => {

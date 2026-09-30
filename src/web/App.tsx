@@ -12,7 +12,11 @@ export function App() {
   const [tab, setTab] = useState<Tab>("providers");
 
   useEffect(() => {
-    api.config().then(setConfig, (e: Error) => setError(e.message));
+    const load = () => api.config().then(setConfig, (e: Error) => setError(e.message));
+    load();
+    // 從終端機登入完回到頁面時，重新讀取登入狀態
+    window.addEventListener("focus", load);
+    return () => window.removeEventListener("focus", load);
   }, []);
 
   return (

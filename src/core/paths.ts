@@ -10,3 +10,17 @@ export function amDir(home: string = homedir(), env: Record<string, string | und
 export function configPath(home: string = homedir(), env: Record<string, string | undefined> = process.env): string {
   return join(amDir(home, env), "config.json");
 }
+
+// 附加訂閱帳號的資料夾，每個帳號一個（Claude Code 以 CLAUDE_CONFIG_DIR 指向它）
+export function accountDir(id: string, home: string = homedir(), env: Record<string, string | undefined> = process.env): string {
+  return join(amDir(home, env), "accounts", id);
+}
+
+// 主帳號：Claude Code 預設的設定資料夾與狀態檔（沒有設定 CLAUDE_CONFIG_DIR 時）
+export function claudeDir(home: string = homedir()): string {
+  return join(home, ".claude");
+}
+
+export function claudeStatePath(home: string = homedir()): string {
+  return join(home, ".claude.json");
+}
