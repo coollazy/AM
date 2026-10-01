@@ -1,6 +1,6 @@
 # PROGRESS
 
-進行中的工作與目前狀態。用來在 /compact 或重新開啟對話後接續工作。完成後將項目移到 `DONE.md`。
+進行中的工作與目前狀態。用來在 /compact 或重新開啟對話後接續工作。完成後將項目移到 `CHANGELOG.md`。
 
 ## 格式
 
@@ -58,7 +58,7 @@
 - **還沒解決的問題**：無待決事項。低優先 TODO 見 `TODO.md`（Homebrew、程式碼簽章、新版提醒）。
 - **下一步**：等使用者新需求或 Windows 實機測試回報；有使用者可見改動時再發版（改 `package.json` version → 合併 `master` → `git tag vX.Y.Z` → push）。
 - **相關檔案/位置**
-  - 規則與指令：`CLAUDE.md`；架構：`docs/architecture.md`；追蹤：`TODO.md`、`PROGRESS.md`、`DONE.md`
+  - 規則與指令：`CLAUDE.md`；架構：`docs/architecture.md`；追蹤：`TODO.md`、`PROGRESS.md`、`CHANGELOG.md`
   - 參數解析 `src/cli/args.ts`；選單 `src/cli/menu.ts`、`src/cli/prompt.ts`；環境變數 `src/core/env.ts`；設定 `src/core/config.ts`
   - 網站 `src/server/app.ts`、`src/web/`；開機自動執行 `src/platform/`
   - 打包 `scripts/build.ts`、`scripts/package.ts`；安裝 `scripts/install/install.sh`、`install.ps1`；截圖 `scripts/screenshots.ts`

@@ -1,4 +1,4 @@
-# DONE
+# CHANGELOG
 
 已完成項目，依完成時間由舊到新排列，新項目一律加在最下方。
 
@@ -58,3 +58,4 @@
 - 2026-09-24：決定放棄支援 Antigravity CLI（`agy`），原因記在 `TODO.md`「已放棄」
 - 2026-09-24：發布 v1.1.0
 - 2026-09-24：GitHub Actions 建立 v1.1.0 Release 成功（master、develop 測試也通過），並以一行指令把使用者的 am 更新到 1.1.0，管理網站自動重新啟動
+- 2026-10-01：`DONE.md` 改名為 `CHANGELOG.md`，並更新 `CLAUDE.md`、`PROGRESS.md` 中的引用
