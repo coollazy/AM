@@ -19,6 +19,7 @@ export const api = {
   config: () => request<PublicConfig>("GET", "/api/config"),
   createProvider: (body: unknown) => request<PublicConfig>("POST", "/api/providers", body),
   updateProvider: (id: string, body: unknown) => request<PublicConfig>("PUT", `/api/providers/${encodeURIComponent(id)}`, body),
+  loginProvider: (id: string) => request<{ ok: true }>("POST", `/api/providers/${encodeURIComponent(id)}/login`, {}),
   deleteProvider: (id: string) => request<PublicConfig>("DELETE", `/api/providers/${encodeURIComponent(id)}`),
   reorderProviders: (ids: string[]) => request<PublicConfig>("PUT", "/api/providers-order", { ids }),
   models: (body: { providerId?: string; baseUrl: string; apiKey: string }) => request<ModelsResult>("POST", "/api/models", body),

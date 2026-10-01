@@ -52,6 +52,7 @@ src/
     providers.ts   向服務商查詢模型清單（逾時、重試一次）
     models.ts      過濾非 LLM 模型、判斷是否支援 1M、自動挑選輔助模型、模型上限
     env.ts         組出啟動 Claude Code 的環境變數
+    accounts.ts    附加訂閱帳號：共用捷徑、同步設定、讀取登入 email、刪除前登出
     launch.ts      以組好的環境變數啟動 claude
   cli/         終端機介面
     main.ts        執行檔入口，解析子指令
@@ -61,9 +62,7 @@ src/
     app.ts         Hono 應用程式、API 路由
     security.ts    請求來源檢查
   web/         網站前端（React）
-  platform/    開機自動執行
-    macos.ts
-    windows.ts
+  platform/    開機自動執行、解除安裝、開終端機登入（login.ts）
 tests/         單元測試，目錄結構對應 src/
 ```
 
@@ -82,7 +81,8 @@ API key 以明碼存在設定檔中，不使用系統鑰匙圈（使用者決定
   "version": 1,
   "server": { "port": 4141 },
   "providers": [
-    { "id": "subscription", "type": "subscription", "name": "Claude 訂閱制" },
+    { "id": "subscription", "type": "subscription", "name": "Claude 訂閱制", "primary": true, "email": null },
+    { "id": "work", "type": "subscription", "name": "公司 Team", "primary": false, "email": "me@company.example" },
     {
       "id": "mixroute",
       "type": "api",
@@ -110,6 +110,7 @@ API key 以明碼存在設定檔中，不使用系統鑰匙圈（使用者決定
 ```
 
 - `providers`：`type` 為 `subscription`（訂閱制）或 `api`（API key 服務商）。`helperModel` 為 `null` 時自動挑選。
+- 訂閱制：`primary` 為主帳號（最多一個）；舊版設定沒有此欄位時，第一個訂閱制視為主帳號。`email` 選填，用來預填登入頁並比對實際登入的帳號。附加帳號的資料夾是 `~/.am/accounts/<id>/`（見第 6 節）。
 - `models.limits`：依模型名稱設定，所有服務商共用。
 - `lastSelection`：由 `am` 選單寫入；其餘欄位由網站寫入。
 
@@ -118,7 +119,10 @@ API key 以明碼存在設定檔中，不使用系統鑰匙圈（使用者決定
 ```
 am
  └─ 第一層：選服務商（預設停在上次選的服務商；還沒有 API 服務商時，提示執行 am web 新增）
-     ├─ 訂閱制 → 直接啟動 Claude Code（進去後用 /model 切換）
+     ├─ 訂閱制（選單顯示登入的 email 或「尚未登入」）
+     │   ├─ 環境有 CLAUDE_CONFIG_DIR 或 CLAUDE_CODE_OAUTH_TOKEN → 報錯停止，說明原因與修復方式
+     │   ├─ 附加帳號 → 建立／修復共用捷徑、從主帳號同步設定
+     │   └─ 啟動 Claude Code（進去後用 /model 切換）
      └─ API 服務商 → 查詢模型清單（逾時 10 秒，失敗自動重試一次）
          ├─ 成功 → 第二層：選模型
          │          ・方向鍵選擇、打字即時篩選
@@ -156,7 +160,27 @@ CLAUDE_CODE_MAX_CONTEXT_TOKENS
 | `CLAUDE_CODE_MAX_OUTPUT_TOKENS` | 不設 | 非 Claude 模型（名稱不以 `claude-` 開頭）：`limits` 有設定用設定值，否則用 `defaultMaxOutputTokens`；Claude 模型：`limits` 有設定才設 |
 | `CLAUDE_CODE_MAX_CONTEXT_TOKENS` | 不設 | `limits` 有設定才設 |
 
+附加訂閱帳號另外設定 `CLAUDE_CONFIG_DIR` 指向它的資料夾（主帳號不設）。
+
 每個終端視窗執行 `am` 都是獨立程序，設定只傳給它啟動的 Claude Code，不影響其他視窗。
+
+### 多個訂閱帳號（只支援 macOS）
+
+Claude Code 一個設定資料夾對應一個登入（`CLAUDE_CONFIG_DIR`；macOS 鑰匙圈的登入項目依資料夾路徑區分），AM 用這點讓多個訂閱帳號同時使用。
+
+- 主帳號：Claude Code 預設的 `~/.claude` 與 `~/.claude.json`，直接執行 `claude` 用的就是它。從網站刪除只是從選單移除，不登出、不動資料；沒有主帳號時新增的訂閱制成為主帳號。換主帳號＝在 `claude` 裡 `/logout` 再 `/login`，AM 不碰登入憑證。
+- 附加帳號：資料夾 `~/.am/accounts/<id>/`，只能透過 `am` 進入。
+- 共用（附加帳號資料夾裡的捷徑指向 `~/.claude`）：`CLAUDE.md`、`settings.json`、`keybindings.json`、`history.jsonl`、`agents`、`commands`、`skills`、`plugins`、`rules`、`output-styles`、`workflows`、`agent-memory`、`themes`、`projects`（對話紀錄與 memory）、`file-history`、`plans`、`tasks`、`paste-cache`、`uploads`。帳號、執行狀態、暫存與非 Claude Code 標準的項目不共用。
+  - 主帳號缺少的資料夾先建立（捷徑指向不存在的資料夾時，Claude Code 無法在裡面建檔）；缺少的檔案不先建立，Claude Code 第一次透過捷徑寫入時會直接建在主帳號（2026-09-30 以 Claude Code 2.1.280 實測 settings.json）。
+  - 捷徑被換成真的檔案或資料夾時，改名為 `<名稱>.bak-<時間>` 備份後重建，並提示使用者。
+- 每次啟動附加帳號前，從主帳號的 `.claude.json` 複製到附加帳號的 `.claude.json`：
+  - 鏡像（主帳號沒有就刪除）：`mcpServers`；各專案的 `mcpServers`、`enabledMcpjsonServers`、`disabledMcpjsonServers`、`disabledMcpServers`。
+  - 主帳號有才覆蓋：首次使用與介面偏好（`hasCompletedOnboarding`、`lastOnboardingVersion`、`theme` 等）；各專案的信任設定（`hasTrustDialogAccepted`、`allowedTools` 等）。
+  - 附加帳號裡新增或刪除的 MCP 會在下次啟動被還原。
+- 登入 email：讀各帳號 `.claude.json` 的 `oauthAccount.emailAddress`（與 `organizationName`）。
+- 登入：網站「登入」按鈕以 AppleScript 開啟內建「終端機」執行 `claude auth login`（附加帳號帶 `CLAUDE_CONFIG_DIR`，有填 email 時加 `--email`），並移除 `CLAUDE_CODE_OAUTH_TOKEN`。
+- 刪除附加帳號：先以該資料夾執行 `claude auth logout`（由 Claude Code 清除鑰匙圈的登入），再刪除資料夾；只允許刪除 `~/.am/accounts/` 底下的資料夾。背景網站由系統啟動，PATH 不含 `~/.local/bin`，執行 `claude` 前補上常見安裝位置。
+- Windows：單一檔案的捷徑需要系統管理員或開發人員模式，這版維持最多一個訂閱制。
 
 ## 7. 服務商 API
 
@@ -171,7 +195,8 @@ CLAUDE_CODE_MAX_CONTEXT_TOKENS
 - 頁面：
   - 使用說明（頁首）：「三步驟開始使用」卡片＋資料安全提示條（滑鼠停留時顯示設定檔位置）。
   - 服務商列表：卡片顯示名稱、類型、網址主機名與輔助模型，不顯示 API key；上移、下移、刪除（需確認）收在「⋯」選單。
-  - 訂閱制最多一個：Claude Code 只有一份登入資料，多個訂閱制項目效果相同。已有訂閱制時新增表單不提供此類型，API 也會拒絕；刪除後可重新加回。
+  - 訂閱帳號卡片：主帳號標示、登入的 email 與組織（未登入顯示「尚未登入」與「登入」按鈕，只在 macOS）、主帳號／附加帳號的說明；填寫的 email 與實際登入不同，或兩個帳號登入同一個 email 時顯示警告。從終端機登入完回到頁面時自動重新讀取。
+  - 訂閱帳號表單：名稱、email（選填）；新增附加帳號時說明共用範圍與「授權時用無痕視窗」。Windows 已有訂閱制時不提供此類型，API 也會拒絕。
   - 服務商編輯：網址、API key、「測試連線」（查詢模型清單）、輔助模型（從模型清單下拉選擇）。
   - 模型設定：排除關鍵字、支援 1M 的模型名單、非 Claude 模型預設輸出上限、個別模型上限。
 - 前端建置結果嵌入執行檔，不需額外檔案。
@@ -261,7 +286,7 @@ Windows 上 `am` 啟動時會將終端機字碼頁切換為 UTF-8，以正確顯
 1. 詢問是否確定（預設否）；非互動環境需加 `--yes`。只能從安裝好的執行檔執行。
 2. 停止管理網站、關閉開機自動執行。
 3. 安裝目錄除了 am 以外沒有其他檔案時，移除 PATH 設定：macOS 移除安裝腳本寫入 shell 設定檔的區塊（以 `# AM（Agent Account Manager）` 標記辨識，路徑以實際位置比對，處理捷徑）；Windows 從使用者 PATH 移除。安裝目錄還有其他工具時（例如 `~/.local/bin`）保留，避免影響其他工具。
-4. 詢問是否刪除設定目錄（預設否，`--purge`／`--keep-config` 可略過詢問）。
+4. 詢問是否刪除設定目錄（預設否，`--purge`／`--keep-config` 可略過詢問）。刪除時先逐一登出 `~/.am/accounts/` 底下的附加訂閱帳號；主帳號不登出、`~/.claude` 不動。
 5. 刪除執行檔：macOS 直接刪除；Windows 執行中的檔案無法刪除，由背景 `cmd.exe` 等 am 結束後刪除執行檔與空的安裝目錄。
 
 ### 啟動前檢查

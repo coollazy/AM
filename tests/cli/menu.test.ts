@@ -1,17 +1,19 @@
 import { describe, expect, test } from "bun:test";
 import { CLAUDE_NOT_INSTALLED, NO_API_PROVIDER_TIP, runMenu, type MenuDeps } from "../../src/cli/menu";
 import { currentItem, type PromptResult, type PromptState } from "../../src/cli/prompt";
-import { defaultConfig, type ApiProvider, type Config } from "../../src/core/config";
+import { defaultConfig, type ApiProvider, type Config, type SubscriptionProvider } from "../../src/core/config";
 import type { ModelListResult } from "../../src/core/providers";
 
 const mixroute: ApiProvider = { id: "mixroute", type: "api", name: "MixRoute", baseUrl: "https://api.mixroute.ai", apiKey: "sk-m", helperModel: null };
+const work: SubscriptionProvider = { id: "work", type: "subscription", name: "公司 Team", primary: false, email: null };
 const linkai: ApiProvider = { id: "linkai", type: "api", name: "LinkAI", baseUrl: "https://linkai.llc", apiKey: "sk-l", helperModel: null };
 
 type Answer = (state: PromptState<any>) => PromptResult<any>;
 
 // 依序回答每個選單畫面，並記錄畫面內容與啟動的環境變數
-function harness(config: Config, answers: Answer[], models: Record<string, ModelListResult> = {}) {
+function harness(config: Config, answers: Answer[], models: Record<string, ModelListResult> = {}, logins: Record<string, string> = {}) {
   const prompts: PromptState<any>[] = [];
+  const prepared: string[] = [];
   const launches: Array<{ env: Record<string, string>; args: string[] }> = [];
   const saved: Array<[string, unknown]> = [];
   const logs: string[] = [];
@@ -32,11 +34,17 @@ function harness(config: Config, answers: Answer[], models: Record<string, Model
       launches.push({ env, args });
       return 0;
     },
+    loginInfo: async (p) => (logins[p.id] ? { email: logins[p.id]!, organization: null } : null),
+    accountDir: (id) => `/Users/a/.am/accounts/${id}`,
+    prepareAccount: async (dir) => {
+      prepared.push(dir);
+      return [];
+    },
     log: (m) => logs.push(m),
     env: { PATH: "/usr/bin", ANTHROPIC_API_KEY: "全域的 key" },
     platform: "darwin",
   };
-  return { deps, prompts, launches, saved, logs };
+  return { deps, prompts, launches, saved, logs, prepared };
 }
 
 const pick =
@@ -50,7 +58,7 @@ const back: Answer = () => ({ type: "back" });
 const cancel: Answer = () => ({ type: "cancel" });
 const enterDefault: Answer = (state) => ({ type: "select", value: currentItem(state)!.value, toggleOn: false });
 
-function configWith(...providers: ApiProvider[]): Config {
+function configWith(...providers: Array<ApiProvider | SubscriptionProvider>): Config {
   const config = defaultConfig();
   config.providers.push(...providers);
   return config;
@@ -63,6 +71,41 @@ describe("runMenu", () => {
     expect(h.prompts).toHaveLength(1);
     expect(h.launches).toEqual([{ env: { PATH: "/usr/bin" }, args: ["--resume"] }]);
     expect(h.saved).toEqual([["subscription", undefined]]);
+  });
+
+  test("訂閱帳號在選單上顯示登入的 email，未登入顯示尚未登入", async () => {
+    const h = harness(configWith(mixroute, work), [cancel], {}, { subscription: "me@example.com" });
+    await runMenu(h.deps, []);
+    expect(h.prompts[0]!.items.map((i) => i.hint)).toEqual(["訂閱制 · me@example.com", undefined, "訂閱制 · 尚未登入"]);
+  });
+
+  test("附加帳號：準備資料夾後以 CLAUDE_CONFIG_DIR 啟動；主帳號不準備也不設定", async () => {
+    const h = harness(configWith(work), [pick("公司 Team")]);
+    h.deps.prepareAccount = async (dir) => (h.prepared.push(dir), ["已修復共用項目「skills」"]);
+    expect(await runMenu(h.deps, [])).toBe(0);
+    expect(h.prepared).toEqual(["/Users/a/.am/accounts/work"]);
+    expect(h.launches[0]!.env).toEqual({ PATH: "/usr/bin", CLAUDE_CONFIG_DIR: "/Users/a/.am/accounts/work" });
+    expect(h.logs).toEqual(["已修復共用項目「skills」", "啟動 Claude Code：公司 Team"]);
+    expect(h.saved).toEqual([["work", undefined]]);
+
+    const primary = harness(configWith(work), [pick("Claude 訂閱制")]);
+    await runMenu(primary.deps, []);
+    expect(primary.prepared).toEqual([]);
+    expect(primary.launches[0]!.env.CLAUDE_CONFIG_DIR).toBeUndefined();
+  });
+
+  test("選訂閱帳號時有衝突的環境變數：報錯停止；選 API 服務商照常", async () => {
+    const h = harness(configWith(mixroute, work), [pick("公司 Team")]);
+    h.deps.env = { PATH: "/usr/bin", CLAUDE_CODE_OAUTH_TOKEN: "t" };
+    expect(await runMenu(h.deps, [])).toBe(1);
+    expect(h.launches).toHaveLength(0);
+    expect(h.prepared).toHaveLength(0);
+    expect(h.logs[0]).toContain("無法以訂閱帳號啟動");
+
+    const api = harness(configWith(mixroute), [pick("MixRoute"), pick("claude-sonnet-5")], { mixroute: { ok: true, models: ["claude-sonnet-5"] } });
+    api.deps.env = { PATH: "/usr/bin", CLAUDE_CODE_OAUTH_TOKEN: "t" };
+    expect(await runMenu(api.deps, [])).toBe(0);
+    expect(api.launches).toHaveLength(1);
   });
 
   test("API 服務商：查模型 → 選模型 → 記住選擇 → 啟動", async () => {

@@ -8,12 +8,26 @@ type Editing = { mode: "new" } | { mode: "edit"; provider: PublicProvider } | nu
 export function Providers({ config, onChange }: { config: PublicConfig; onChange: (c: PublicConfig) => void }) {
   const [editing, setEditing] = useState<Editing>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const providers = config.providers;
 
   async function run(action: () => Promise<PublicConfig>) {
     setError(null);
+    setNotice(null);
     try {
-      onChange(await action());
+      const next = await action();
+      if (next.notice) setNotice(next.notice);
+      onChange(next);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function login(p: PublicProvider) {
+    setError(null);
+    try {
+      await api.loginProvider(p.id);
+      setNotice(`已開啟終端機，請在瀏覽器完成「${p.name}」的授權；完成後回到這個頁面就會顯示登入的帳號。`);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -30,7 +44,8 @@ export function Providers({ config, onChange }: { config: PublicConfig; onChange
     return (
       <ProviderForm
         provider={editing.mode === "edit" ? editing.provider : null}
-        canAddSubscription={!providers.some((p) => p.type === "subscription")}
+        canAddSubscription={config.canAddSubscription}
+        hasPrimary={providers.some((p) => p.type === "subscription" && p.primary)}
         onCancel={() => setEditing(null)}
         onSaved={(c) => {
           onChange(c);
@@ -62,10 +77,32 @@ export function Providers({ config, onChange }: { config: PublicConfig; onChange
             <div className="name">
               {p.name}
               <span className={p.type === "subscription" ? "badge sub" : "badge"}>{p.type === "subscription" ? "訂閱制" : "API"}</span>
+              {p.type === "subscription" && p.primary && <span className="badge">主帳號</span>}
             </div>
-            <div className="meta">{p.type === "subscription" ? "使用你的 Claude 帳號登入" : `${hostOf(p.baseUrl)} · 輔助模型：${p.helperModel ?? "自動"}`}</div>
+            {p.type === "subscription" ? (
+              <>
+                <div className="meta">{p.login ? [p.login.email, p.login.organization].filter(Boolean).join(" · ") : "尚未登入"}</div>
+                <div className="note">
+                  {p.primary
+                    ? "直接在終端機輸入 claude 時使用這個帳號。"
+                    : "只能透過 am 選擇。設定、skills、對話紀錄與 memory 和主帳號共用；MCP 沿用主帳號，在這個帳號新增或刪除的 MCP 下次啟動會被還原。"}
+                </div>
+                {p.warnings.map((w) => (
+                  <div className="warn" key={w}>
+                    {w}
+                  </div>
+                ))}
+              </>
+            ) : (
+              <div className="meta">{`${hostOf(p.baseUrl)} · 輔助模型：${p.helperModel ?? "自動"}`}</div>
+            )}
           </div>
           <div className="card-actions">
+            {p.type === "subscription" && !p.login && config.loginButton && (
+              <button className="btn-primary" onClick={() => login(p)}>
+                登入
+              </button>
+            )}
             <button className="btn-soft" onClick={() => setEditing({ mode: "edit", provider: p })}>
               編輯
             </button>
@@ -75,16 +112,25 @@ export function Providers({ config, onChange }: { config: PublicConfig; onChange
               onMoveUp={() => move(i, -1)}
               onMoveDown={() => move(i, 1)}
               onDelete={() => run(() => api.deleteProvider(p.id))}
+              confirmText={deleteConfirmText(p)}
             />
           </div>
         </div>
       ))}
+      {notice && <p className="notice">{notice}</p>}
       {error && <p className="error">{error}</p>}
     </section>
   );
 }
 
+function deleteConfirmText(p: PublicProvider): string {
+  if (p.type !== "subscription") return "確定要刪除嗎？";
+  if (p.primary) return "只會從選單移除，不會登出，也不會動到 ~/.claude。確定要刪除嗎？";
+  return "會登出這個帳號並刪除它的資料夾；共用的設定與對話紀錄不受影響。確定要刪除嗎？";
+}
+
 type MoreMenuProps = {
+  confirmText: string;
   canMoveUp: boolean;
   canMoveDown: boolean;
   onMoveUp: () => void;
@@ -92,7 +138,7 @@ type MoreMenuProps = {
   onDelete: () => void;
 };
 
-function MoreMenu({ canMoveUp, canMoveDown, onMoveUp, onMoveDown, onDelete }: MoreMenuProps) {
+function MoreMenu({ confirmText, canMoveUp, canMoveDown, onMoveUp, onMoveDown, onDelete }: MoreMenuProps) {
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -131,7 +177,7 @@ function MoreMenu({ canMoveUp, canMoveDown, onMoveUp, onMoveDown, onDelete }: Mo
         <div className="menu" role="menu">
           {confirming ? (
             <>
-              <div className="confirm">確定要刪除嗎？</div>
+              <div className="confirm">{confirmText}</div>
               <div className="confirm-actions">
                 <button className="btn-soft" onClick={() => setConfirming(false)}>
                   取消

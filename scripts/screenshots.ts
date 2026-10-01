@@ -1,6 +1,6 @@
 // 產生 README 用的截圖（docs/images/）。需要本機安裝 Google Chrome。
 // 使用示範資料與暫存設定目錄，不會讀取或修改使用者的設定。
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createPrompt, render, type PromptState } from "../src/cli/prompt";
@@ -17,12 +17,25 @@ const tmp = await mkdtemp(join(tmpdir(), "am-screenshots-"));
 const configPath = join(tmp, "config.json");
 await updateConfig(configPath, (c) => {
   c.server.port = PORT;
-  c.providers.push(
+  c.providers = [
+    { id: "subscription", type: "subscription", name: "個人 Max", primary: true, email: null },
+    { id: "work", type: "subscription", name: "公司 Team", primary: false, email: "me@company.example" },
     { id: "mixroute", type: "api", name: "MixRoute", baseUrl: "https://api.mixroute.ai", apiKey: "sk-demo-000000000000", helperModel: null },
     { id: "linkai", type: "api", name: "LinkAI", baseUrl: "https://linkai.llc", apiKey: "sk-demo-000000000000", helperModel: "claude-sonnet-5" },
-  );
+  ];
 });
-const server = startServer({ configPath, port: PORT });
+// 示範的登入狀態（暫存目錄當作家目錄，附加帳號資料夾在設定目錄的 accounts 底下）
+await writeFile(join(tmp, ".claude.json"), JSON.stringify({ oauthAccount: { emailAddress: "me@example.com" } }));
+await mkdir(join(tmp, "accounts", "work"), { recursive: true });
+await writeFile(join(tmp, "accounts", "work", ".claude.json"), JSON.stringify({ oauthAccount: { emailAddress: "me@company.example", organizationName: "Example Inc." } }));
+const server = startServer({
+  configPath,
+  port: PORT,
+  home: tmp,
+  platform: "darwin",
+  logoutAccount: async () => true,
+  openTerminal: async () => {},
+});
 
 const chrome = Bun.spawn([CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars", `--remote-debugging-port=${DEBUG_PORT}`, `--user-data-dir=${join(tmp, "chrome")}`, "about:blank"], {
   stdout: "ignore",
@@ -73,14 +86,15 @@ try {
 
   // 終端機選單：以正式的選單畫面產生函式輸出，再排版成終端機視窗
   const providers: Provider[] = [
-    { id: "subscription", type: "subscription", name: "Claude 訂閱制" },
+    { id: "subscription", type: "subscription", name: "個人 Max", primary: true, email: null },
+    { id: "work", type: "subscription", name: "公司 Team", primary: false, email: null },
     { id: "mixroute", type: "api", name: "MixRoute", baseUrl: "", apiKey: "", helperModel: null },
     { id: "linkai", type: "api", name: "LinkAI", baseUrl: "", apiKey: "", helperModel: null },
   ];
   const layer1 = createPrompt<Provider>({
     title: "選擇服務商",
-    items: providers.map((p) => ({ label: p.name, value: p, hint: p.type === "subscription" ? "訂閱制" : undefined })),
-    initial: providers[1],
+    items: providers.map((p) => ({ label: p.name, value: p, hint: p.id === "subscription" ? "訂閱制 · me@example.com" : p.id === "work" ? "訂閱制 · me@company.example" : undefined })),
+    initial: providers[2],
     escape: "cancel",
   });
   const models = ["claude-fable-5-1", "claude-haiku-4-5-20251001", "claude-opus-5", "claude-opus-5-5", "claude-sonnet-4-6", "claude-sonnet-5", "gemini-2.5-pro", "gpt-5.5"];

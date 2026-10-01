@@ -18,6 +18,8 @@
   --danger: #b4443c;
   --danger-soft: #f6e1de;
   --ok: #2f7a55;
+  --warn: #9a6415;
+  --warn-soft: #f7ecd9;
   --shadow: 0 1px 0 rgba(31, 42, 55, 0.05), 0 8px 24px -14px rgba(31, 42, 55, 0.22);
   --serif: "Iowan Old Style", "Songti TC", "Noto Serif TC", Georgia, serif;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
@@ -81,7 +83,11 @@ button:disabled { opacity: 0.45; cursor: default; }
 .card .meta { font-size: 13px; color: var(--muted); margin-top: 3px; overflow-wrap: anywhere; }
 .badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--chip); color: var(--muted); }
 .badge.sub { background: var(--accent-soft); color: var(--accent-text); }
+.card .note { font-size: 12.5px; color: var(--muted-2); margin-top: 4px; line-height: 1.5; }
+.card .warn { font-size: 12.5px; color: var(--warn); background: var(--warn-soft); border-radius: 8px; padding: 4px 8px; margin-top: 6px; }
+.notice { color: var(--warn); background: var(--warn-soft); border-radius: 10px; padding: 8px 12px; margin: 8px 0; font-size: 14px; }
 .card-actions { display: flex; align-items: center; gap: 4px; position: relative; }
+.card-actions .btn-primary { padding: 8px 16px; }
 .empty { text-align: center; color: var(--muted); padding: 28px; background: var(--card); border-radius: 20px; box-shadow: var(--shadow); }
 
 /* ⋯ 選單 */
@@ -89,7 +95,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .menu button { width: 100%; justify-content: flex-start; background: none; padding: 9px 12px; border-radius: 9px; font-size: 14px; }
 .menu button:hover:not(:disabled) { background: var(--chip); }
 .menu button.danger { color: var(--danger); }
-.menu .confirm { padding: 8px 10px 6px; font-size: 13px; color: var(--text-soft); }
+.menu .confirm { padding: 8px 10px 6px; font-size: 13px; color: var(--text-soft); width: 240px; line-height: 1.5; }
 .menu .confirm-actions { display: flex; gap: 6px; padding: 0 4px 4px; }
 .menu .confirm-actions button { flex: 1; justify-content: center; }
 

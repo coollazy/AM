@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtemp, rm } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, readlink, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadConfig, updateConfig } from "../../src/core/config";
 import { configPath } from "../../src/core/paths";
 import type { FetchLike } from "../../src/core/providers";
-import { createApp, maskKey, slugify } from "../../src/server/app";
+import { createApp, maskKey, slugify, type AppOptions } from "../../src/server/app";
 
 const PORT = 4141;
 const ORIGIN = `http://127.0.0.1:${PORT}`;
@@ -14,6 +14,10 @@ let home: string;
 let path: string;
 let providerResponses: Response[];
 let providerCalls: Array<{ url: string; auth?: string }>;
+let platform: NodeJS.Platform;
+let logouts: string[];
+let logoutResult: boolean;
+let terminals: string[];
 
 const fakeFetch: FetchLike = async (url, init) => {
   providerCalls.push({ url, auth: (init?.headers as Record<string, string>)?.Authorization });
@@ -25,14 +29,29 @@ beforeEach(async () => {
   path = configPath(home, {});
   providerResponses = [];
   providerCalls = [];
+  platform = "darwin";
+  logouts = [];
+  logoutResult = true;
+  terminals = [];
 });
+
+function services(): Pick<AppOptions, "home" | "platform" | "logoutAccount" | "openTerminal"> {
+  return {
+    home,
+    platform,
+    logoutAccount: async (dir) => (logouts.push(dir), logoutResult),
+    openTerminal: async (command) => {
+      terminals.push(command);
+    },
+  };
+}
 
 afterEach(async () => {
   await rm(home, { recursive: true, force: true });
 });
 
 function app() {
-  return createApp({ configPath: path, port: PORT, fetch: fakeFetch });
+  return createApp({ ...services(), configPath: path, port: PORT, fetch: fakeFetch });
 }
 
 function call(method: string, url: string, body?: unknown, headers: Record<string, string> = {}) {
@@ -87,7 +106,9 @@ describe("服務商管理", () => {
     const res = await call("GET", "/api/config");
     const body = await res.json();
     expect(body.configPath).toBe(path);
-    expect(body.providers).toEqual([{ id: "subscription", type: "subscription", name: "Claude 訂閱制" }]);
+    expect(body.providers).toEqual([{ id: "subscription", type: "subscription", name: "Claude 訂閱制", primary: true, email: null, login: null, warnings: [] }]);
+    expect(body.canAddSubscription).toBe(true);
+    expect(body.loginButton).toBe(true);
   });
 
   test("新增後回傳的 API key 已遮蔽，設定檔存的是完整 key", async () => {
@@ -132,18 +153,9 @@ describe("服務商管理", () => {
     });
   });
 
-  test("已經有訂閱制時不能再新增，刪除後可以重新加回", async () => {
-    const res = await call("POST", "/api/providers", { type: "subscription", name: "另一個訂閱" });
-    expect(res.status).toBe(400);
-    expect((await res.json()).error).toBe("已經有 Claude 訂閱制，不能重複新增");
-    await call("DELETE", "/api/providers/subscription");
-    expect((await call("POST", "/api/providers", { type: "subscription", name: "Claude 訂閱制" })).status).toBe(201);
-    expect((await loadConfig(path)).providers.filter((p) => p.type === "subscription")).toHaveLength(1);
-  });
-
-  test("可以改訂閱制的名稱", async () => {
-    await call("PUT", "/api/providers/subscription", { name: "我的訂閱" });
-    expect((await loadConfig(path)).providers[0]).toEqual({ id: "subscription", type: "subscription", name: "我的訂閱" });
+  test("可以改訂閱制的名稱與 email，主帳號身分不變", async () => {
+    await call("PUT", "/api/providers/subscription", { name: "我的訂閱", email: "me@example.com", primary: false });
+    expect((await loadConfig(path)).providers[0]).toEqual({ id: "subscription", type: "subscription", name: "我的訂閱", primary: true, email: "me@example.com" });
   });
 
   test("刪除時一併清除該服務商的上次選擇", async () => {
@@ -167,6 +179,108 @@ describe("服務商管理", () => {
     await call("PUT", "/api/providers-order", { ids: ["mixroute", "subscription"] });
     expect((await loadConfig(path)).providers.map((p) => p.id)).toEqual(["mixroute", "subscription"]);
     expect((await call("PUT", "/api/providers-order", { ids: ["mixroute"] })).status).toBe(400);
+  });
+});
+
+describe("訂閱帳號", () => {
+  const claudeDir = () => join(home, ".claude");
+  const accountDir = (id: string) => join(home, ".am", "accounts", id);
+  const writeState = (file: string, email: string) => writeFile(file, JSON.stringify({ oauthAccount: { emailAddress: email, organizationName: "ACME" } }));
+
+  test("新增的訂閱制成為附加帳號，建立資料夾、共用捷徑並同步 MCP", async () => {
+    await writeFile(join(home, ".claude.json"), JSON.stringify({ mcpServers: { jira: {} } }));
+    const res = await call("POST", "/api/providers", { type: "subscription", name: "Work", email: "work@example.com" });
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.providers[1]).toEqual({ id: "work", type: "subscription", name: "Work", primary: false, email: "work@example.com", login: null, warnings: [] });
+    expect(await readlink(join(accountDir("work"), "skills"))).toBe(join(claudeDir(), "skills"));
+    expect(JSON.parse(await readFile(join(accountDir("work"), ".claude.json"), "utf8")).mcpServers).toEqual({ jira: {} });
+  });
+
+  test("沒有主帳號時，新增的訂閱制成為主帳號，不建立附加帳號資料夾", async () => {
+    await call("DELETE", "/api/providers/subscription");
+    const body = await (await call("POST", "/api/providers", { type: "subscription", name: "Claude" })).json();
+    expect(body.providers[0]).toMatchObject({ id: "claude", primary: true });
+    await expect(lstat(join(home, ".am", "accounts"))).rejects.toThrow();
+  });
+
+  test("刪除主帳號只從選單移除，不登出、不動 ~/.claude", async () => {
+    await mkdir(claudeDir());
+    await writeFile(join(claudeDir(), "CLAUDE.md"), "keep");
+    expect((await call("DELETE", "/api/providers/subscription")).status).toBe(200);
+    expect(logouts).toEqual([]);
+    expect(await readFile(join(claudeDir(), "CLAUDE.md"), "utf8")).toBe("keep");
+    expect((await loadConfig(path)).providers).toEqual([]);
+  });
+
+  test("刪除附加帳號：先登出再刪除資料夾", async () => {
+    await call("POST", "/api/providers", { type: "subscription", name: "Work" });
+    const body = await (await call("DELETE", "/api/providers/work")).json();
+    expect(logouts).toEqual([accountDir("work")]);
+    expect(body.notice).toBeUndefined();
+    await expect(lstat(accountDir("work"))).rejects.toThrow();
+    expect(body.providers.map((p: { id: string }) => p.id)).toEqual(["subscription"]);
+  });
+
+  test("登出失敗仍刪除，並提示鑰匙圈可能殘留登入資料", async () => {
+    await call("POST", "/api/providers", { type: "subscription", name: "Work" });
+    logoutResult = false;
+    const body = await (await call("DELETE", "/api/providers/work")).json();
+    expect(body.notice).toContain("登出失敗");
+    await expect(lstat(accountDir("work"))).rejects.toThrow();
+  });
+
+  test("顯示各帳號登入的 email，未登入為 null", async () => {
+    await call("POST", "/api/providers", { type: "subscription", name: "Work" });
+    await writeState(join(home, ".claude.json"), "me@example.com");
+    const body = await (await call("GET", "/api/config")).json();
+    expect(body.providers[0].login).toEqual({ email: "me@example.com", organization: "ACME" });
+    expect(body.providers[1].login).toBeNull();
+  });
+
+  test("email 與填寫的不同、或兩個帳號登入同一個帳號時警告", async () => {
+    await call("PUT", "/api/providers/subscription", { name: "Claude 訂閱制", email: "me@example.com" });
+    await call("POST", "/api/providers", { type: "subscription", name: "Work" });
+    await writeState(join(home, ".claude.json"), "ME@example.com");
+    await writeState(join(accountDir("work"), ".claude.json"), "me@example.com");
+    const body = await (await call("GET", "/api/config")).json();
+    expect(body.providers[0].warnings).toEqual(["與「Work」登入的是同一個帳號，切換帳號不會換到不同的額度"]);
+    expect(body.providers[1].warnings).toEqual(["與「Claude 訂閱制」登入的是同一個帳號，切換帳號不會換到不同的額度"]);
+
+    await call("PUT", "/api/providers/work", { name: "Work", email: "work@example.com" });
+    const again = await (await call("GET", "/api/config")).json();
+    expect(again.providers[1].warnings[0]).toBe("預期登入 work@example.com，實際登入的是 me@example.com");
+  });
+
+  test("登入按鈕：主帳號不帶帳號資料夾，附加帳號帶自己的資料夾與 email", async () => {
+    await call("POST", "/api/providers", { type: "subscription", name: "Work", email: "work@example.com" });
+    expect((await call("POST", "/api/providers/subscription/login", {})).status).toBe(200);
+    expect((await call("POST", "/api/providers/work/login", {})).status).toBe(200);
+    expect(terminals[0]).toStartWith("env -u CLAUDE_CODE_OAUTH_TOKEN -u CLAUDE_CONFIG_DIR claude auth login;");
+    expect(terminals[1]).toStartWith(`env -u CLAUDE_CODE_OAUTH_TOKEN CLAUDE_CONFIG_DIR='${accountDir("work")}' claude auth login --email 'work@example.com';`);
+  });
+
+  test("登入按鈕只支援訂閱帳號與 macOS", async () => {
+    await call("POST", "/api/providers", mixroute);
+    expect((await call("POST", "/api/providers/mixroute/login", {})).status).toBe(400);
+    platform = "win32";
+    expect((await call("POST", "/api/providers/subscription/login", {})).status).toBe(400);
+    expect((await (await call("GET", "/api/config")).json()).loginButton).toBe(false);
+    expect(terminals).toEqual([]);
+  });
+
+  test("Windows 只能有一個訂閱制，刪除後可以重新加回", async () => {
+    platform = "win32";
+    expect((await (await call("GET", "/api/config")).json()).canAddSubscription).toBe(false);
+    const res = await call("POST", "/api/providers", { type: "subscription", name: "另一個" });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("Windows 目前只支援一個 Claude 訂閱制");
+    await call("DELETE", "/api/providers/subscription");
+    expect((await call("POST", "/api/providers", { type: "subscription", name: "Claude" })).status).toBe(201);
+  });
+
+  test("email 格式錯誤時回傳 400", async () => {
+    expect((await call("POST", "/api/providers", { type: "subscription", name: "Work", email: "nope" })).status).toBe(400);
   });
 });
 
@@ -221,7 +335,7 @@ describe("模型設定", () => {
 
 test("關閉請求會呼叫 onShutdown，且同樣需要通過來源檢查", async () => {
   let called = 0;
-  const shutdownApp = createApp({ configPath: path, port: PORT, onShutdown: () => called++ });
+  const shutdownApp = createApp({ ...services(), configPath: path, port: PORT, onShutdown: () => called++ });
   const headers = { host: `127.0.0.1:${PORT}`, "content-type": "application/json" };
   const evil = await shutdownApp.request("/api/shutdown", { method: "POST", headers: { ...headers, origin: "https://evil.com" }, body: "{}" });
   expect(evil.status).toBe(403);

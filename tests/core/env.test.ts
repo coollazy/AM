@@ -2,7 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { defaultConfig, type ApiProvider, type Config } from "../../src/core/config";
 import { buildLaunchEnv, MANAGED_ENV_VARS } from "../../src/core/env";
 
-const subscription = { id: "subscription", type: "subscription", name: "Claude 訂閱制" } as const;
+const subscription = { id: "subscription", type: "subscription", name: "Claude 訂閱制", primary: true, email: null } as const;
+const extra = { id: "work", type: "subscription", name: "公司", primary: false, email: null } as const;
 const mixroute: ApiProvider = {
   id: "mixroute",
   type: "api",
@@ -20,11 +21,18 @@ function shellEnv(): Record<string, string> {
 
 describe("buildLaunchEnv", () => {
   test("訂閱制：清除 7 個管理變數，其他變數保留", () => {
-    const env = buildLaunchEnv(shellEnv(), defaultConfig(), { provider: subscription });
+    const env = buildLaunchEnv(shellEnv(), defaultConfig(), { provider: subscription, accountDir: null });
     for (const key of MANAGED_ENV_VARS) expect(env[key]).toBeUndefined();
     expect(env.PATH).toBe("/usr/bin");
     expect(env.ANTHROPIC_CUSTOM_HEADERS).toBe("x-team: a");
     expect(env.CLAUDE_CODE_ENABLE_TELEMETRY).toBe("1");
+  });
+
+  test("主帳號不設 CLAUDE_CONFIG_DIR；附加帳號指向自己的資料夾", () => {
+    expect(buildLaunchEnv(shellEnv(), defaultConfig(), { provider: subscription, accountDir: null }).CLAUDE_CONFIG_DIR).toBeUndefined();
+    const env = buildLaunchEnv(shellEnv(), defaultConfig(), { provider: extra, accountDir: "/Users/a/.am/accounts/work" });
+    expect(env.CLAUDE_CONFIG_DIR).toBe("/Users/a/.am/accounts/work");
+    for (const key of MANAGED_ENV_VARS) expect(env[key]).toBeUndefined();
   });
 
   test("API 服務商：設定網址、key、模型，不設 ANTHROPIC_API_KEY", () => {
@@ -88,13 +96,13 @@ describe("buildLaunchEnv", () => {
   });
 
   test("Windows 上不分大小寫清除管理變數", () => {
-    const env = buildLaunchEnv({ anthropic_api_key: "x", Path: "C:\\bin" }, defaultConfig(), { provider: subscription }, "win32");
+    const env = buildLaunchEnv({ anthropic_api_key: "x", Path: "C:\\bin" }, defaultConfig(), { provider: subscription, accountDir: null }, "win32");
     expect(env.anthropic_api_key).toBeUndefined();
     expect(env.Path).toBe("C:\\bin");
   });
 
   test("macOS 上名稱大小寫不同的變數不屬於管理範圍", () => {
-    const env = buildLaunchEnv({ anthropic_api_key: "x" }, defaultConfig(), { provider: subscription }, "darwin");
+    const env = buildLaunchEnv({ anthropic_api_key: "x" }, defaultConfig(), { provider: subscription, accountDir: null }, "darwin");
     expect(env.anthropic_api_key).toBe("x");
   });
 });

@@ -113,3 +113,28 @@ describe("normalizeProvider", () => {
     expect(() => normalizeProvider({ ...api, helperModel: 1 })).toThrow(ConfigError);
   });
 });
+
+describe("訂閱帳號", () => {
+  const sub = (id: string, extra: Record<string, unknown> = {}) => ({ id, type: "subscription", name: id, ...extra });
+
+  test("舊版設定沒有 primary 欄位：第一個訂閱制成為主帳號", () => {
+    const config = normalizeConfig({ providers: [sub("subscription")] });
+    expect(config.providers[0]).toEqual({ id: "subscription", type: "subscription", name: "subscription", primary: true, email: null });
+  });
+
+  test("主帳號被刪除後不會自動指定新的主帳號", () => {
+    const config = normalizeConfig({ providers: [sub("work", { primary: false })] });
+    expect(config.providers[0]).toMatchObject({ primary: false });
+  });
+
+  test("主帳號最多一個", () => {
+    expect(() => normalizeConfig({ providers: [sub("a", { primary: true }), sub("b", { primary: true })] })).toThrow("只能有一個主帳號");
+  });
+
+  test("email 選填：空白視為未填，格式錯誤時丟出錯誤", () => {
+    expect(normalizeProvider(sub("a", { email: " me@example.com " }))).toMatchObject({ email: "me@example.com" });
+    expect(normalizeProvider(sub("a", { email: "  " }))).toMatchObject({ email: null });
+    expect(() => normalizeProvider(sub("a", { email: "not-an-email" }))).toThrow(ConfigError);
+    expect(() => normalizeProvider(sub("a", { email: 1 }))).toThrow(ConfigError);
+  });
+});
