@@ -31,11 +31,11 @@
   - 選訂閱帳號時若有 `CLAUDE_CONFIG_DIR` 或 `CLAUDE_CODE_OAUTH_TOKEN`，`am` 報錯停止並說明修復方式；API 服務商不檢查；網站不處理。
 - 已查證：`CLAUDE_CONFIG_DIR` 各自獨立登入（鑰匙圈項目依路徑區分）；Claude Code 寫 settings.json 會保留捷徑（`claude plugin disable` 實測）；`claude auth login/logout/status` 存在。
 - 開發時要實測：對話中編輯全域 CLAUDE.md 是否保留捷徑；`--email` 預填在瀏覽器已登入其他帳號時的效果。
-- 目前狀態：開發完成，等使用者驗收（尚未合併 develop）。`bun test`（182 項）、typecheck、打包皆通過；README／architecture／截圖已更新。
+- 目前狀態：已合併 develop（2026-10-01，使用者決定先合併）。`bun test`（182 項）、typecheck、打包皆通過；README／architecture／截圖已更新。
 - 已實測（暫存 HOME／AM_CONFIG_DIR／埠號 4999，真的 claude 2.1.280）：新增附加帳號會建立 19 個捷徑並同步 MCP；附加帳號裡 `claude mcp get` 讀得到主帳號的 MCP；主帳號缺 settings.json 時，Claude Code 透過捷徑寫入會建在主帳號且捷徑保留；刪除附加帳號真的執行 `claude auth logout` 成功、主帳號鑰匙圈項目仍在；打包後的執行檔網站正常。
 - 實作補充：背景網站 PATH 不含 ~/.local/bin，登出時補上 Claude Code 常見安裝位置。
 - 尚未實測（需要使用者的第二個真實帳號）：網站「登入」按鈕實際開終端機與授權流程；`--email` 預填在瀏覽器已登入其他帳號時的效果；對話中編輯全域 CLAUDE.md 是否保留捷徑；兩個帳號同時使用。
-- 下一步：使用者驗收 → 合併 develop →（要發版時）改版號、合併 master、打 tag。
+- 下一步：用使用者第二個真實帳號實測下方「尚未實測」各項 →（要發版時）改版號、合併 master、打 tag。
 - 待決問題：無。
 
 
