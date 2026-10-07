@@ -5,6 +5,10 @@ export type SubscriptionProvider = {
   id: string;
   type: "subscription";
   name: string;
+  // 主帳號使用 ~/.claude（直接執行 claude 用的就是它）；其他為附加帳號，各自有資料夾
+  primary: boolean;
+  // 使用者填寫的帳號 email（選填），用來預填登入頁並比對實際登入的帳號
+  email: string | null;
 };
 
 export type ApiProvider = {
@@ -50,7 +54,7 @@ export function defaultConfig(): Config {
   return {
     version: 1,
     server: { port: DEFAULT_PORT },
-    providers: [{ id: "subscription", type: "subscription", name: "Claude 訂閱制" }],
+    providers: [{ id: "subscription", type: "subscription", name: "Claude 訂閱制", primary: true, email: null }],
     models: {
       excludeKeywords: [
         "image",
@@ -87,6 +91,13 @@ export function normalizeConfig(raw: unknown): Config {
   const providers = raw.providers === undefined ? base.providers : raw.providers;
   if (!Array.isArray(providers)) throw new ConfigError("設定檔格式錯誤：providers 必須是陣列");
   const normalizedProviders = providers.map((p, i) => normalizeProvider(p, `providers[${i}]`));
+  // 舊版設定沒有 primary 欄位：當時只能有一個訂閱制，它就是主帳號
+  const legacy = !providers.some((p) => isObject(p) && p.type === "subscription" && "primary" in p);
+  const firstSubscription = normalizedProviders.find((p) => p.type === "subscription");
+  if (legacy && firstSubscription) firstSubscription.primary = true;
+  if (normalizedProviders.filter((p) => p.type === "subscription" && p.primary).length > 1) {
+    throw new ConfigError("設定檔格式錯誤：只能有一個主帳號");
+  }
   const ids = new Set<string>();
   for (const p of normalizedProviders) {
     if (ids.has(p.id)) throw new ConfigError(`設定檔格式錯誤：服務商 id「${p.id}」重複`);
@@ -140,7 +151,15 @@ export function normalizeProvider(raw: unknown, where = "provider"): Provider {
     throw new ConfigError(`${where}.id 只能包含小寫英文、數字、- 與 _，且不能以符號開頭`);
   }
   if (typeof name !== "string" || name.trim() === "") throw new ConfigError(`${where}.name 不可為空`);
-  if (type === "subscription") return { id, type, name: name.trim() };
+  if (type === "subscription") {
+    // 空字串視為未填
+    const trimmed = typeof raw.email === "string" ? raw.email.trim() : raw.email;
+    const email = trimmed === "" || trimmed === undefined ? null : trimmed;
+    if (email !== null && (typeof email !== "string" || !/^[^\s@]+@[^\s@]+$/.test(email))) {
+      throw new ConfigError(`${where}.email 格式錯誤`);
+    }
+    return { id, type, name: name.trim(), primary: raw.primary === true, email };
+  }
   if (type !== "api") throw new ConfigError(`${where}.type 必須是 subscription 或 api`);
 
   const { baseUrl, apiKey } = raw;

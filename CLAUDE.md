@@ -66,9 +66,9 @@ docs/         設計文件
 
 - `TODO.md`：待辦事項。新需求或發現的待做工作都記在這裡。
 - `PROGRESS.md`：進行中的工作。記錄目前狀態、下一步與待決問題，讓工作在 /compact 或重新開啟對話後能接續。
-- `DONE.md`：已完成項目。依完成時間由舊到新排列，新項目一律加在最下方。
+- `CHANGELOG.md`：已完成項目。依完成時間由舊到新排列，新項目一律加在最下方。
 
-項目的流向：`TODO.md` → `PROGRESS.md` → `DONE.md`。開始做某項工作時，把它從 TODO 移到 PROGRESS；做完後從 PROGRESS 移到 DONE 並標上完成日期。
+項目的流向：`TODO.md` → `PROGRESS.md` → `CHANGELOG.md`。開始做某項工作時，把它從 TODO 移到 PROGRESS；做完後從 PROGRESS 移到 CHANGELOG 並標上完成日期。
 
 ### Git 分支
 

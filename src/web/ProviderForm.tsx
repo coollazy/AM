@@ -3,18 +3,21 @@ import { api, type ModelsResult, type PublicConfig, type PublicProvider } from "
 
 type Props = {
   provider: PublicProvider | null;
-  // 已經有訂閱制時不能再新增
+  // Windows 已經有訂閱制時不能再新增
   canAddSubscription: boolean;
+  // 已有主帳號時，新增的訂閱制是附加帳號
+  hasPrimary: boolean;
   onCancel: () => void;
   onSaved: (config: PublicConfig) => void;
 };
 
-export function ProviderForm({ provider, canAddSubscription, onCancel, onSaved }: Props) {
+export function ProviderForm({ provider, canAddSubscription, hasPrimary, onCancel, onSaved }: Props) {
   const isNew = provider === null;
   const [type, setType] = useState<"api" | "subscription">(provider?.type ?? "api");
   const [name, setName] = useState(provider?.name ?? "");
   const [baseUrl, setBaseUrl] = useState(provider?.type === "api" ? provider.baseUrl : "");
   const [apiKey, setApiKey] = useState("");
+  const [email, setEmail] = useState(provider?.type === "subscription" ? (provider.email ?? "") : "");
   const [helperModel, setHelperModel] = useState(provider?.type === "api" ? (provider.helperModel ?? "") : "");
   const [models, setModels] = useState<ModelsResult | null>(null);
   const [testing, setTesting] = useState(false);
@@ -37,7 +40,7 @@ export function ProviderForm({ provider, canAddSubscription, onCancel, onSaved }
     e.preventDefault();
     setSaving(true);
     setError(null);
-    const body = type === "subscription" ? { type, name } : { type, name, baseUrl, apiKey, helperModel };
+    const body = type === "subscription" ? { type, name, email } : { type, name, baseUrl, apiKey, helperModel };
     try {
       onSaved(isNew ? await api.createProvider(body) : await api.updateProvider(provider.id, body));
     } catch (err) {
@@ -64,8 +67,28 @@ export function ProviderForm({ provider, canAddSubscription, onCancel, onSaved }
       )}
       <label>
         <span>名稱</span>
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder={type === "api" ? "例如：MixRoute" : "例如：Claude 訂閱制"} required />
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder={type === "api" ? "例如：MixRoute" : "例如：公司 Team"} required />
       </label>
+      {type === "subscription" && (
+        <>
+          {isNew && hasPrimary && (
+            <div className="hint">
+              這會新增一個<strong>附加帳號</strong>，可以和主帳號同時在不同的終端機視窗使用。它和主帳號共用 CLAUDE.md、設定、skills、對話紀錄與
+              memory，MCP 沿用主帳號。附加帳號只能透過 am 選擇，直接輸入 claude 用的是主帳號。儲存後按「登入」完成登入。
+            </div>
+          )}
+          <label>
+            <span>帳號 email（選填）</span>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="off" />
+            <div className="hint">
+              登入時會預先填入；登入後如果實際的帳號不同，這裡會提醒你。授權時建議把終端機顯示的網址貼到瀏覽器的無痕視窗，才不會授權成瀏覽器目前登入的帳號。
+            </div>
+          </label>
+          {!isNew && provider.type === "subscription" && provider.primary && (
+            <div className="hint">想把主帳號換成另一個 Claude 帳號：在終端機輸入 claude，用 /logout 登出後再用 /login 登入新的帳號。</div>
+          )}
+        </>
+      )}
       {type === "api" && (
         <>
           <label>

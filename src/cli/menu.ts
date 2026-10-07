@@ -1,3 +1,4 @@
+import { subscriptionEnvProblem, type LoginInfo } from "../core/accounts";
 import type { ApiProvider, Config, Provider, SubscriptionProvider } from "../core/config";
 import { buildLaunchEnv } from "../core/env";
 import { filterLlmModels, supportsOneMillion } from "../core/models";
@@ -12,6 +13,11 @@ export type MenuDeps = {
   fetchModels: (provider: ApiProvider) => Promise<ModelListResult>;
   prompt: <T>(state: PromptState<T>) => Promise<PromptResult<T>>;
   launch: (env: Record<string, string>, args: string[]) => Promise<number>;
+  // 訂閱帳號目前登入的 email，顯示在選單上；未登入回傳 null
+  loginInfo: (provider: SubscriptionProvider) => Promise<LoginInfo | null>;
+  accountDir: (id: string) => string;
+  // 附加帳號啟動前建立共用捷徑、同步設定；回傳要提示的訊息
+  prepareAccount: (accountDir: string) => Promise<string[]>;
   log: (message: string) => void;
   env: Record<string, string | undefined>;
   platform?: NodeJS.Platform;
@@ -37,12 +43,13 @@ export async function runMenu(deps: MenuDeps, claudeArgs: string[]): Promise<num
       return 1;
     }
 
+    const hints = await subscriptionHints(deps, config.providers);
     const providerChoice = await deps.prompt(
       createPrompt<Provider>({
         title: "選擇服務商",
         notice,
         tip: config.providers.some((p) => p.type === "api") ? undefined : NO_API_PROVIDER_TIP,
-        items: config.providers.map((p) => ({ label: p.name, value: p, hint: p.type === "subscription" ? "訂閱制" : undefined })),
+        items: config.providers.map((p) => ({ label: p.name, value: p, hint: hints.get(p.id) })),
         initial: config.providers.find((p) => p.id === config.lastSelection.providerId),
         escape: "cancel",
       }),
@@ -88,8 +95,22 @@ export async function runMenu(deps: MenuDeps, claudeArgs: string[]): Promise<num
 }
 
 async function launchSubscription(deps: MenuDeps, config: Config, provider: SubscriptionProvider, claudeArgs: string[]): Promise<number> {
+  const problem = subscriptionEnvProblem(deps.env, deps.platform);
+  if (problem) {
+    deps.log(problem);
+    return 1;
+  }
+  const accountDir = provider.primary ? null : deps.accountDir(provider.id);
+  if (accountDir !== null) for (const notice of await deps.prepareAccount(accountDir)) deps.log(notice);
   await deps.saveSelection(provider.id);
-  const env = buildLaunchEnv(deps.env, config, { provider }, deps.platform);
+  const env = buildLaunchEnv(deps.env, config, { provider, accountDir }, deps.platform);
   deps.log(`啟動 Claude Code：${provider.name}`);
   return deps.launch(env, claudeArgs);
+}
+
+// 訂閱帳號在選單上顯示登入的 email，方便確認是哪個帳號
+async function subscriptionHints(deps: MenuDeps, providers: Provider[]): Promise<Map<string, string>> {
+  const subscriptions = providers.filter((p): p is SubscriptionProvider => p.type === "subscription");
+  const logins = await Promise.all(subscriptions.map((p) => deps.loginInfo(p).catch(() => null)));
+  return new Map(subscriptions.map((p, i) => [p.id, `訂閱制 · ${logins[i]?.email ?? "尚未登入"}`]));
 }

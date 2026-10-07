@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { ClaudeNotFoundError, resolveClaudeCommand } from "../../src/core/launch";
+import { ClaudeNotFoundError, resolveClaudeCommand, withClaudeInstallPaths } from "../../src/core/launch";
 
 describe("resolveClaudeCommand", () => {
   test("找到 claude 時直接執行", () => {
@@ -23,5 +23,12 @@ describe("resolveClaudeCommand", () => {
 
   test("找不到時丟出 ClaudeNotFoundError", () => {
     expect(() => resolveClaudeCommand(() => null, "darwin", {})).toThrow(ClaudeNotFoundError);
+  });
+});
+
+test("withClaudeInstallPaths 在原本的 PATH 後面補上 Claude Code 常見的安裝位置，不重複", () => {
+  expect(withClaudeInstallPaths({ PATH: "/usr/bin:/usr/local/bin", X: "1" }, "/Users/a")).toEqual({
+    PATH: "/usr/bin:/usr/local/bin:/Users/a/.local/bin:/Users/a/.claude/local:/opt/homebrew/bin",
+    X: "1",
   });
 });
